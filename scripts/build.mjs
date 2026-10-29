@@ -173,7 +173,9 @@ async function loadSection(section) {
     const source = tag(item, 'source');
     let title = tag(item, 'title');
     if (source && title.endsWith(` - ${source}`)) title = title.slice(0, -(source.length + 3));
-    return { title, source, link: safeUrl(tag(item, 'link')), date: new Date(tag(item, 'pubDate')) };
+    const sourceUrl = safeUrl(decode((item.match(/<source\s+url="([^"]+)"/) ?? [])[1] ?? ''));
+    return { title, source, sourceHost: sourceUrl ? new URL(sourceUrl).hostname : '', link: safeUrl(tag(item, 'link')),
+      date: new Date(tag(item, 'pubDate')) };
   }).filter((a) => a.title && a.link);
 }
 
@@ -294,11 +296,17 @@ function timeTag(date) {
   return Number.isNaN(date.getTime()) ? '' : `<time datetime="${date.toISOString()}">${esc(date.toUTCString())}</time>`;
 }
 
+// The feeds carry no article photos (and publishers' photos aren't ours to reuse), so each card shows the
+// publisher's logo from Google's favicon service instead.
+const logo = (host, size) => (host
+  ? `<img class="thumb" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&amp;sz=64" alt="" width="${size}" height="${size}" loading="lazy">`
+  : '');
+
 function card(article, lead) {
-  return `<article class="card${lead ? ' lead' : ''}">
+  return `<article class="card${lead ? ' lead' : ''}">${logo(article.sourceHost, lead ? 48 : 36)}<div class="card-body">
   <a href="${esc(article.link)}" target="_blank" rel="noopener nofollow">${esc(article.title)}</a>
   <p class="meta"><span>${esc(article.source)}</span>${timeTag(article.date)}</p>
-</article>`;
+</div></article>`;
 }
 
 function section(sec, articles) {
@@ -379,15 +387,23 @@ function newsCard(g) {
   return `<div id="${gameId(g.title)}"><h3>${esc(g.title)}</h3>${news}${official}</div>`;
 }
 
+// Each game is a full-width row of headline cards, laid out like the news sections.
+function gameRow(g) {
+  const official = g.links.length ? `<span class="official">Official: ${g.links.map(([label, url]) =>
+    `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`).join(' · ')}</span>` : '';
+  const cards = g.articles.length ? `<div class="cards">${g.articles.map((a) => card(a, false)).join('\n')}</div>`
+    : '<p class="source">No new headlines this week.</p>';
+  return `<div class="game-row" id="${gameId(g.title)}"><div class="game-head"><h3>${esc(g.title)}</h3>${official}</div>${cards}</div>`;
+}
+
 function gamingBlock(games) {
   const shown = games.filter((g) => g.articles.length || g.links.length);
   if (!shown.length) return '';
-  const card = newsCard;
-  const top = shown.filter((g) => g.priority).map(card).join('');
-  const more = shown.filter((g) => !g.priority).map(card).join('');
+  const top = shown.filter((g) => g.priority).map(gameRow).join('');
+  const more = shown.filter((g) => !g.priority).map(gameRow).join('');
   return `<section id="gaming"><h2>Game Zone</h2><p class="intro">The latest news, updates and patch notes for Roblox, CrossFire, Rules of Survival, Valorant, Dota 2 and more. Play safe: read our guides to <a href="gaming-scams-free-robux.html">"free Robux" and other scams</a> and <a href="protect-gaming-accounts.html">protecting your gaming accounts</a>.</p>
-${top ? `<div class="data-grid">${top}</div>` : ''}
-${more ? `<h3 class="wx-group">More games</h3><div class="data-grid">${more}</div>` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
+${top}
+${more ? `${ad('infeed')}<h3 class="wx-group">More games</h3>${more}` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
 }
 
 function techBlock(topics) {
@@ -422,7 +438,7 @@ const STYLE = `
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:inherit}
 header{background:var(--surface);border-bottom:3px solid var(--accent);position:sticky;top:0;z-index:10}
-.bar{max-width:1240px;margin:auto;padding:12px 16px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.bar{max-width:1240px;margin:auto;padding:12px 16px;display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
 .brand{font-weight:800;font-size:1.4rem;text-decoration:none;letter-spacing:-.02em}
 .brand span{color:var(--accent)}
 .updated{color:var(--muted);font-size:.85rem}
@@ -477,6 +493,19 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .wx-days{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:.88rem}
 .wx-days li{display:grid;grid-template-columns:3em 1.8em 1fr;align-items:center}
 .wx-days li span:last-child{text-align:right}
+.game-row{margin:0 0 20px}
+.game-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:18px 0 10px}
+.game-head h3{margin:0;font-size:1.05rem}
+.game-head .official{font-size:.82rem;color:var(--muted)}
+.game-head .official a{color:var(--accent-2)}
+.card{display:flex;gap:12px;align-items:flex-start}
+.card-body{min-width:0;flex:1}
+.thumb{flex:none;border-radius:8px;background:var(--chip);padding:4px;border:1px solid var(--line)}
+.search{display:flex;gap:6px;flex:1 1 260px;max-width:420px;margin-left:auto}
+.search input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--text);font:inherit;font-size:.9rem}
+.search button{padding:8px 14px;border:0;border-radius:999px;background:var(--accent-2);color:#fff;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+.search+.theme-toggle{margin-left:0}
+@media (max-width:640px){.search{order:3;flex-basis:100%;max-width:none;margin-left:0}}
 .guide-list{list-style:none;padding:0;margin:0 0 8px}
 .guide-list li{padding:10px 0;border-bottom:1px solid var(--line)}
 .guide-list li a{font-weight:700}
@@ -537,7 +566,8 @@ const THEME_TOGGLE = "document.getElementById('theme-toggle').addEventListener('
   + "root.dataset.theme=dark?'light':'dark';try{localStorage.setItem('theme',root.dataset.theme)}catch(e){}});"
   + "document.getElementById('side-toggle').addEventListener('click',function(){"
   + "var open=this.parentNode.classList.toggle('open');this.setAttribute('aria-expanded',open)});";
-const SITE_LINKS =`<a href="guides.html">Guides</a><a href="${TOOLS_URL}/">Free tools</a>`;
+const SITE_LINKS = `<a href="guides.html">Guides</a><a href="${TOOLS_URL}/internet-speed-test/">Speed test</a>`
+  + `<a href="${TOOLS_URL}/">Free tools</a>`;
 
 function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
   const adScript = AD_CLIENT
@@ -576,6 +606,7 @@ ${adScript}
 <body>
 <header>
   <div class="bar"><a class="brand" href="./">${esc(SITE_NAME).replace(/ (\S+)$/, ' <span>$1</span>')}</a>${nav.updated ?? ''}
+    <form class="search" role="search" action="https://www.google.com/search" method="get" target="_blank"><input type="search" name="q" placeholder="Search Google" aria-label="Search Google" required><button type="submit">Search</button></form>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch light or dark theme"><span class="moon" aria-hidden="true">☾</span><span class="sun" aria-hidden="true">☀</span></button></div>
   <nav>${nav.links}</nav>
 </header>
@@ -602,16 +633,21 @@ function home({ sections, trends, builtAt, markets, scores, weather, gaming, tec
   const weatherHtml = weatherBlock(weather);
   const gamingHtml = gamingBlock(gaming);
   const techHtml = techBlock(tech);
-  // The Game Zone leads the page. Weather follows Philippines, markets follow Business, tech trends follow
-  // Technology and scores follow Sports; if a section is missing they go at the end.
-  const after = { philippines: weatherHtml, business: marketsHtml, tech: techHtml, sports: scoresHtml };
+  // Page order: weather and world time first, then Top Stories, Philippines and World, then the Game Zone, then the
+  // other sections, each followed by its data block (Business → markets, Technology → tech trends, Sports → scores).
+  // A block whose section failed to load goes at the end.
+  const after = { world: gamingHtml && gamingHtml + ad('infeed'), business: marketsHtml, tech: techHtml, sports: scoresHtml };
+  const afterNav = { world: ['gaming', 'Game Zone', gamingHtml], business: ['markets', 'Markets', marketsHtml],
+    tech: ['tech-trends', 'Tech Trends', techHtml], sports: ['scores', 'Scores', scoresHtml] };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
-  const mainHtml = gamingHtml + sections.map(({ sec, articles }, i) => section(sec, articles) + (after[sec.id] ?? '')
-    + (i === 1 ? promoBlocks() : '')).join('\n') + extras;
-  const dataLinks = (weatherHtml ? '<a href="#weather">Weather</a>' : '')
-    + (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (techHtml ? '<a href="#tech-trends">Tech Trends</a>' : '')
-    + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
+  const mainHtml = (weatherHtml && weatherHtml + ad('infeed')) + sections.map(({ sec, articles }) => section(sec, articles) + (after[sec.id] ?? '')
+    + (sec.id === 'world' ? promoBlocks() : '')).join('\n') + extras;
+  const navLinks = (weatherHtml ? '<a href="#weather">Weather &amp; time</a>' : '')
+    + sections.map(({ sec }) => {
+      const [id, label, html] = afterNav[sec.id] ?? [];
+      return `<a href="#${sec.id}">${esc(sec.title)}</a>` + (html ? `<a href="#${id}">${label}</a>` : '');
+    }).join('');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
   const sidebar = ad('sidebar') + ad('sidebar');
@@ -635,8 +671,7 @@ for (const t of document.querySelectorAll('time')) {
     title: `${SITE_NAME} — Philippines & World News`,
     nav: {
       updated: `<span class="updated">Updated ${esc(manila)} (Manila time)</span>`,
-      links: (gamingHtml ? '<a href="#gaming">Game Zone</a>' : '')
-        + sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>`).join('') + dataLinks + SITE_LINKS,
+      links: navLinks + SITE_LINKS,
     },
     body,
     schema: { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, description: DESCRIPTION,
@@ -645,6 +680,7 @@ for (const t of document.querySelectorAll('time')) {
 }
 
 const TOOL_LINKS = [
+  ['internet-speed-test/', 'Internet speed test'],
   ['take-home-pay-calculator/', 'Take-home pay calculator (SSS, PhilHealth, tax)'],
   ['13th-month-pay-calculator/', '13th month pay calculator'],
   ['loan-calculator/', 'Loan calculator'],
@@ -655,6 +691,7 @@ const TOOL_LINKS = [
 
 // Every calculator on the tools site, grouped as in its own side menu.
 const ALL_TOOLS = [
+  ['Internet', [['internet-speed-test/', 'Speed test']]],
   ['Pay & taxes', [['take-home-pay-calculator/', 'Take-home pay'], ['13th-month-pay-calculator/', '13th month pay']]],
   ['Money', [['loan-calculator/', 'Loan'], ['compound-interest-calculator/', 'Compound interest'],
     ['savings-goal-calculator/', 'Savings goal'], ['discount-calculator/', 'Discount'], ['tip-calculator/', 'Tip'],
@@ -667,22 +704,25 @@ const ALL_TOOLS = [
 function sideMenu(file) {
   const home = file === 'index.html' ? '' : './'; // section anchors live on the home page
   const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
-  const news = SECTIONS.map((s) => link(`${home}#${s.id}`, s.title)).join('');
-  const data = link(`${home}#weather`, 'Weather forecast') + link(`${home}#markets`, 'Markets: peso & stocks')
-    + link(`${home}#tech-trends`, 'Tech Trends: AI & automation')
-    + link(`${home}#scores`, 'Scores: NBA & football');
+  const sectionLink = (id) => link(`${home}#${id}`, SECTIONS.find((s) => s.id === id).title);
+  // Same order as the home page.
+  const weatherLinks = link(`${home}#weather`, 'Weather & world time');
+  const news = ['top', 'philippines', 'world'].map(sectionLink).join('');
   const games = GAMING.filter((g) => g.priority).map((g) => link(`${home}#${gameId(g.title)}`, g.title)).join('')
     + link(`${home}#gaming`, 'More games')
     + link('gaming-scams-free-robux.html', 'Avoid gaming scams', file === 'gaming-scams-free-robux.html');
+  const moreNews = sectionLink('business') + link(`${home}#markets`, 'Markets: peso & stocks')
+    + sectionLink('tech') + link(`${home}#tech-trends`, 'Tech Trends: AI & automation')
+    + sectionLink('entertainment') + sectionLink('sports') + link(`${home}#scores`, 'Scores: NBA & football');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
     + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
     + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
   const guides = link('guides.html', 'All guides', file === 'guides.html')
     + GUIDES.slice(0, 3).map((g) => link(`${g.slug}.html`, g.title.split(':')[0], file === `${g.slug}.html`)).join('');
   return `<div class="side"><button type="button" class="side-toggle" id="side-toggle" aria-expanded="false" aria-controls="side-list">`
-    + `Menu: games, news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
-    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>Game Zone</h2>${games}<h2>News</h2>${news}`
-    + `<h2>Weather, markets, tech &amp; scores</h2>${data}`
+    + `Menu: news, games, tools &amp; guides <span aria-hidden="true">▾</span></button>`
+    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>Weather</h2>${weatherLinks}<h2>News</h2>${news}`
+    + `<h2>Game Zone</h2>${games}<h2>More news</h2>${moreNews}`
     + `${tools}<h2>Guides</h2>${guides}</nav></div>`;
 }
 
