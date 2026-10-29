@@ -3,6 +3,53 @@
 
 export const GUIDES = [
   {
+    slug: 'payroll-deductions-guide',
+    title: 'SSS, PhilHealth, Pag-IBIG and Tax: Your Payslip Deductions Explained',
+    description: 'What each deduction on a Philippine payslip is, how much you pay at 2025 rates, and how to check your take-home pay.',
+    updated: '2026-10-29',
+    tool: { path: 'take-home-pay-calculator/', label: 'Compute your take-home pay' },
+    body: `
+<p><b>Short answer:</b> on a ₱30,000 monthly salary, a private-sector employee pays about ₱1,500 to SSS, ₱750 to PhilHealth, ₱200 to Pag-IBIG and roughly ₱1,000 in withholding tax, for take-home pay of about ₱26,500. Here is where each number comes from.</p>
+<h2>SSS (Social Security System)</h2>
+<p>SSS covers retirement, sickness, maternity, disability and death benefits. For 2025 the total contribution is <b>15% of your Monthly Salary Credit (MSC)</b>: your employer pays 10% and you pay <b>5%</b>.</p>
+<ul>
+  <li>The MSC is your salary rounded into ₱500 brackets, from a minimum of ₱5,000 to a maximum of ₱35,000.</li>
+  <li>So your share ranges from <b>₱250 to ₱1,750</b> a month. Part of the contribution on salary credits above ₱20,000 goes to your Mandatory Provident Fund (MySSS Pension Booster) savings.</li>
+</ul>
+<h2>PhilHealth</h2>
+<p>PhilHealth is the national health insurance program. The premium is <b>5% of your basic monthly salary</b>, shared equally, so you pay <b>2.5%</b>.</p>
+<ul>
+  <li>Salaries below ₱10,000 are computed as ₱10,000, and salaries above ₱100,000 as ₱100,000.</li>
+  <li>Your share is therefore <b>₱250 to ₱2,500</b> a month.</li>
+</ul>
+<h2>Pag-IBIG Fund (HDMF)</h2>
+<p>Pag-IBIG is a savings program that also gives access to housing and short-term loans. Since 2024, contributions are computed on salary up to <b>₱10,000</b>.</p>
+<ul>
+  <li>You pay <b>2%</b> (1% if you earn ₱1,500 or less), and your employer pays 2%.</li>
+  <li>The maximum employee share is <b>₱200</b> a month. You can choose to contribute more to grow your savings.</li>
+</ul>
+<h2>Withholding tax</h2>
+<p>Income tax is computed on your salary <i>after</i> your SSS, PhilHealth and Pag-IBIG shares are deducted. Under the TRAIN Law table in effect since 2023:</p>
+<ul>
+  <li>Annual taxable income up to <b>₱250,000</b> (about ₱20,833 a month) is <b>tax-free</b>.</li>
+  <li>From ₱250,000 to ₱400,000, the rate is 15% of the excess over ₱250,000.</li>
+  <li>From ₱400,000 to ₱800,000, it is ₱22,500 plus 20% of the excess over ₱400,000, and higher brackets go up to 35%.</li>
+</ul>
+<p>Minimum wage earners are exempt from income tax on their minimum wage, and 13th month pay and other benefits are tax-free up to ₱90,000 a year.</p>
+<h2>Worked example: ₱30,000 a month</h2>
+<ul>
+  <li>SSS: MSC ₱30,000 × 5% = <b>₱1,500</b></li>
+  <li>PhilHealth: ₱30,000 × 2.5% = <b>₱750</b></li>
+  <li>Pag-IBIG: ₱10,000 × 2% = <b>₱200</b></li>
+  <li>Taxable income: ₱30,000 − ₱2,450 = ₱27,550 a month, or ₱330,600 a year</li>
+  <li>Tax: (₱330,600 − ₱250,000) × 15% = ₱12,090 a year, about <b>₱1,007.50</b> a month</li>
+  <li>Take-home pay: <b>₱26,542.50</b></li>
+</ul>
+<h2>Check your contributions are being paid</h2>
+<p>Deductions on your payslip only help you if your employer actually remits them. Check your records online through the <b>My.SSS</b> portal, the <b>PhilHealth Member Portal</b> and <b>Virtual Pag-IBIG</b>. If payments are missing, raise it with HR first, then with the agency.</p>
+<p class="note">General information based on 2025 contribution rates. Rates change; check SSS, PhilHealth, Pag-IBIG and the BIR for the latest figures.</p>`,
+  },
+  {
     slug: '13th-month-pay-guide',
     title: '13th Month Pay in the Philippines: Who Gets It and How to Compute It',
     description: 'A plain-English guide to 13th month pay under Presidential Decree 851: who is entitled, how to compute it, when it is due, and how it is taxed.',

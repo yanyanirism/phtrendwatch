@@ -33,6 +33,11 @@ The build also writes `about.html`, `editorial-policy.html`, `contact.html`, `pr
 
 If every feed fails during a build, the job fails and the last good page stays live.
 
+## Search engines
+
+- **Verification:** set `GOOGLE_SITE_VERIFICATION` and/or `BING_SITE_VERIFICATION` to the code from Search Console or Bing Webmaster Tools; the build adds the meta tags. (A Search Console *Domain* property verified by DNS needs neither.)
+- **IndexNow:** with `INDEXNOW_KEY` set, the build serves the key at `/<key>.txt`, and after every deploy triggered by a push the `notify-search-engines` job submits the sitemap to Bing and other IndexNow engines. Scheduled headline refreshes don't trigger it.
+
 ## AdSense notes
 
 - When `ADSENSE_CLIENT` is set, the build also writes `ads.txt`, which AdSense requires.
