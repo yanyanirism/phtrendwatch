@@ -10,6 +10,10 @@ const SITE_NAME = env('SITE_NAME') || 'PH Trend Watch';
 const SITE_URL = env('SITE_URL').replace(/\/+$/, '');
 const CONTACT_EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(env('CONTACT_EMAIL')) ? env('CONTACT_EMAIL') : '';
 const TOOLS_URL = (env('TOOLS_URL') || 'https://tools.phtrendwatch.world').replace(/\/+$/, '');
+// Search engine ownership checks. The IndexNow key is public by design: it is served at /<key>.txt.
+const GOOGLE_VERIFY = env('GOOGLE_SITE_VERIFICATION');
+const BING_VERIFY = env('BING_SITE_VERIFICATION');
+const INDEXNOW_KEY = /^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
 const AD_EVERY = Math.max(2, Number(env('AD_EVERY')) || 6);
 const PER_SECTION = 10;
 
@@ -323,7 +327,9 @@ function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
     : '';
   const canonical = SITE_URL ? `<link rel="canonical" href="${esc(`${SITE_URL}/${file === 'index.html' ? '' : file}`)}">` : '';
   const pageLinks = SITE_LINKS + PAGES.map((p) => `<a href="${p.file}">${p.label}</a>`).join('');
-  const adAccount = AD_CLIENT ? `<meta name="google-adsense-account" content="${esc(AD_CLIENT)}">` : '';
+  const adAccount = (AD_CLIENT ? `<meta name="google-adsense-account" content="${esc(AD_CLIENT)}">` : '')
+    + (GOOGLE_VERIFY ? `<meta name="google-site-verification" content="${esc(GOOGLE_VERIFY)}">` : '')
+    + (BING_VERIFY ? `<meta name="msvalidate.01" content="${esc(BING_VERIFY)}">` : '');
   const ld = schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '';
 
   return `<!doctype html>
@@ -408,6 +414,7 @@ for (const t of document.querySelectorAll('time')) {
 }
 
 const TOOL_LINKS = [
+  ['take-home-pay-calculator/', 'Take-home pay calculator (SSS, PhilHealth, tax)'],
   ['13th-month-pay-calculator/', '13th month pay calculator'],
   ['loan-calculator/', 'Loan calculator'],
   ['savings-goal-calculator/', 'Savings goal calculator'],
@@ -571,6 +578,7 @@ await mkdir('dist', { recursive: true });
 await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
+if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
 if (AD_CLIENT) await writeFile('dist/ads.txt', `google.com, ${AD_CLIENT.replace('ca-', '')}, DIRECT, f08c47fec0942fa0\n`);
 if (SITE_URL) {
   const pages = [['', lastmod], ['guides.html', lastmod], ...GUIDES.map((g) => [`${g.slug}.html`, g.updated]),
