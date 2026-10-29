@@ -63,6 +63,20 @@ const PSE_STOCKS = [
   ['AC', 'Ayala Corp.'], ['ICT', 'ICTSI'], ['JFC', 'Jollibee Foods'], ['TEL', 'PLDT'], ['MER', 'Meralco'],
   ['URC', 'Universal Robina'],
 ];
+// Fuel: there is no free feed of Philippine pump prices (the DOE publishes weekly PDFs), so the section shows this
+// week's announced adjustments from the news, world crude benchmarks, and a link to the DOE's own price monitor.
+const FUEL_NEWS = {
+  title: 'Pump price updates',
+  query: '("oil price" OR "fuel price" OR "pump price") (rollback OR increase OR hike OR adjustment) Philippines',
+  days: 10,
+  must: [/gasoline|diesel|kerosene|pump price|fuel price|oil price/i,
+    /rollback|roll back|increase|hike|\bup\b|\bdown\b|adjust|watch|\bcut\b|fall|climb|rise|drop/i],
+  not: /china|yuan|india|rupee|malaysia|ringgit|indonesia|vietnam|storage|opec|futures/i,
+  // Social media reposts are dropped; the news outlets carry the same announcements.
+  sourceNot: /facebook|instagram|tiktok|youtube|x\.com|twitter/i,
+};
+const CRUDE = [['BZ=F', 'Brent crude'], ['CL=F', 'WTI crude']];
+const DOE_OIL_MONITOR = 'https://doe.gov.ph/oil-monitor';
 const WORLD_INDICES = [
   ['PSEI.PS', 'PSEi'],
   ['^GSPC', 'S&P 500'], ['^DJI', 'Dow Jones'], ['^IXIC', 'Nasdaq'], ['^N225', 'Nikkei 225'], ['^HSI', 'Hang Seng'],
@@ -254,7 +268,8 @@ async function loadPseStocks() {
 
 async function loadNewsGroup(game) {
   const articles = (await loadSection({ url: newsSearch(game.query, game.days) }))
-    .filter((a) => game.must.every((re) => re.test(a.title)) && !game.not?.test(a.title) && !GAMING_EXCLUDE.test(a.title))
+    .filter((a) => game.must.every((re) => re.test(a.title)) && !game.not?.test(a.title) && !GAMING_EXCLUDE.test(a.title)
+      && !game.sourceNot?.test(a.source))
     .sort((a, b) => b.date - a.date);
   const seenTitles = new Set();
   return { title: game.title, priority: Boolean(game.priority), links: game.links ?? [],
@@ -405,6 +420,20 @@ function gamingBlock(games) {
   return `<section id="gaming"><h2>Game Zone</h2><p class="intro">The latest news, updates and patch notes for Roblox, CrossFire, Rules of Survival, Valorant, Dota 2 and more. Play safe: read our guides to <a href="gaming-scams-free-robux.html">"free Robux" and other scams</a> and <a href="protect-gaming-accounts.html">protecting your gaming accounts</a>.</p>
 ${top}
 ${more ? `${ad('infeed')}<h3 class="wx-group">More games</h3>${more}` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
+}
+
+function fuelBlock({ news, crude }) {
+  const articles = news?.articles ?? [];
+  if (!articles.length && !crude.length) return '';
+  const change = (c) => (c == null ? '' : `<span class="${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '▲' : '▼'} ${num(Math.abs(c), 2)}%</span>`);
+  const crudeTable = crude.length ? `<div><h3>World oil prices</h3><table><thead><tr><th>Benchmark</th><th>US$ / barrel</th><th>Change</th></tr></thead><tbody>${
+    crude.map((q) => `<tr><td>${esc(q.name)}</td><td>${num(q.price, 2)}</td><td>${change(q.change)}</td></tr>`).join('')}</tbody></table>
+<p class="source">Crude prices drive local pump prices with a delay of about a week. Delayed prices from Yahoo Finance.</p></div>` : '';
+  const updates = articles.length ? `<div><h3>This week at the pump</h3><ul class="headlines">${articles.map((a) => `<li>
+<a href="${esc(a.link)}" target="_blank" rel="noopener nofollow">${esc(a.title)}</a>
+<span class="meta"><span>${esc(a.source)}</span>${timeTag(a.date)}</span></li>`).join('')}</ul></div>` : '';
+  return `<section id="fuel"><h2>Fuel prices</h2><p class="intro">Gasoline, diesel and kerosene price adjustments in the Philippines are usually announced on Monday and take effect on Tuesday. For official pump prices by area, see the <a href="${DOE_OIL_MONITOR}" target="_blank" rel="noopener">DOE Oil Monitor</a>.</p>
+<div class="data-grid">${updates}${crudeTable}</div><p class="source">Pump price headlines link to their original publishers via Google News.</p></section>`;
 }
 
 function techBlock(topics) {
@@ -628,27 +657,28 @@ ${body}
 `;
 }
 
-function home({ sections, trends, builtAt, markets, scores, weather, gaming, tech }) {
+function home({ sections, trends, builtAt, markets, scores, weather, gaming, tech, fuel }) {
   const marketsHtml = marketsBlock(markets);
   const scoresHtml = scoresBlock(scores);
   const weatherHtml = weatherBlock(weather);
   const gamingHtml = gamingBlock(gaming);
   const techHtml = techBlock(tech);
+  const fuelHtml = fuelBlock(fuel);
   // Page order: weather and world time first, then Top Stories, Philippines and World, then the Game Zone, then the
-  // other sections, each followed by its data block (Business → markets, Technology → tech trends, Sports → scores).
-  // A block whose section failed to load goes at the end.
-  const after = { world: gamingHtml && gamingHtml + ad('infeed'), business: marketsHtml, tech: techHtml, sports: scoresHtml };
-  const afterNav = { world: ['gaming', 'Game Zone', gamingHtml], business: ['markets', 'Markets', marketsHtml],
-    tech: ['tech-trends', 'Tech Trends', techHtml], sports: ['scores', 'Scores', scoresHtml] };
+  // other sections, each followed by its data blocks (Business → markets and fuel prices, Technology → tech trends,
+  // Sports → scores). A block whose section failed to load goes at the end.
+  const after = { world: gamingHtml && gamingHtml + ad('infeed'), business: marketsHtml + fuelHtml, tech: techHtml,
+    sports: scoresHtml };
+  const afterNav = { world: [['gaming', 'Game Zone', gamingHtml]],
+    business: [['markets', 'Markets', marketsHtml], ['fuel', 'Fuel prices', fuelHtml]],
+    tech: [['tech-trends', 'Tech Trends', techHtml]], sports: [['scores', 'Scores', scoresHtml]] };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
   const mainHtml = (weatherHtml && weatherHtml + ad('infeed')) + sections.map(({ sec, articles }) => section(sec, articles) + (after[sec.id] ?? '')
     + (sec.id === 'world' ? promoBlocks() : '')).join('\n') + extras;
   const navLinks = (weatherHtml ? '<a href="#weather">Weather &amp; time</a>' : '')
-    + sections.map(({ sec }) => {
-      const [id, label, html] = afterNav[sec.id] ?? [];
-      return `<a href="#${sec.id}">${esc(sec.title)}</a>` + (html ? `<a href="#${id}">${label}</a>` : '');
-    }).join('');
+    + sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>` + (afterNav[sec.id] ?? [])
+      .filter(([, , html]) => html).map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')).join('');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
   const sidebar = ad('sidebar') + ad('sidebar');
@@ -713,6 +743,7 @@ function sideMenu(file) {
     + link(`${home}#gaming`, 'More games')
     + link('gaming-scams-free-robux.html', 'Avoid gaming scams', file === 'gaming-scams-free-robux.html');
   const moreNews = sectionLink('business') + link(`${home}#markets`, 'Markets: peso & stocks')
+    + link(`${home}#fuel`, 'Fuel prices: gas & diesel')
     + sectionLink('tech') + link(`${home}#tech-trends`, 'Tech Trends: AI & automation')
     + sectionLink('entertainment') + sectionLink('sports') + link(`${home}#scores`, 'Scores: NBA & football');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
@@ -881,7 +912,7 @@ if (!sections.length) {
 }
 
 const skip = (what) => (err) => (console.warn(`Skipping ${what}: ${err.message}`), null);
-const [trends, forex, stocks, indices, scores, weather, gaming, tech] = await Promise.all([
+const [trends, forex, stocks, indices, scores, weather, gaming, tech, fuelNews, crude] = await Promise.all([
   loadTrends().catch((err) => (console.warn(`Skipping trends: ${err.message}`), [])),
   loadForex().catch(skip('forex')),
   loadPseStocks().catch((err) => (console.warn(`Skipping PSE stocks: ${err.message}`), [])),
@@ -890,12 +921,15 @@ const [trends, forex, stocks, indices, scores, weather, gaming, tech] = await Pr
   settledValues(CITIES.map(loadWeather)),
   settledValues(GAMING.map(loadNewsGroup)),
   settledValues(TECH_TOPICS.map(loadNewsGroup)),
+  loadNewsGroup(FUEL_NEWS).catch(skip('fuel news')),
+  settledValues(CRUDE.map(loadQuote)),
 ]);
 const builtAt = new Date();
 const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
-await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather, gaming, tech }));
+await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather, gaming, tech,
+  fuel: { news: fuelNews, crude } }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
 if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
@@ -913,4 +947,5 @@ console.log(`Built dist/: ${sections.reduce((n, s) => n + s.articles.length, 0)}
   + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${weather.length} weather cities, `
   + `${gaming.reduce((n, g) => n + g.articles.length, 0)} gaming headlines, `
   + `${tech.reduce((n, g) => n + g.articles.length, 0)} tech trend headlines, `
+  + `${fuelNews?.articles.length ?? 0} fuel updates, ${crude.length} crude prices, `
   + `${PAGES.length} info pages, ${GUIDES.length} guides.`);
