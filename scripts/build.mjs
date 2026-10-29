@@ -13,7 +13,8 @@ const TOOLS_URL = (env('TOOLS_URL') || 'https://tools.phtrendwatch.world').repla
 // Search engine ownership checks. The IndexNow key is public by design: it is served at /<key>.txt.
 const GOOGLE_VERIFY = env('GOOGLE_SITE_VERIFICATION');
 const BING_VERIFY = env('BING_SITE_VERIFICATION');
-const INDEXNOW_KEY = /^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
+const GA_ID = /^G-[A-Z0-9]{4,20}$/.test(env('GA_MEASUREMENT_ID')) ? env('GA_MEASUREMENT_ID') : '';
+const INDEXNOW_KEY =/^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
 const AD_EVERY = Math.max(2, Number(env('AD_EVERY')) || 6);
 const PER_SECTION = 10;
 
@@ -66,6 +67,23 @@ const WORLD_INDICES = [
   ['PSEI.PS', 'PSEi'],
   ['^GSPC', 'S&P 500'], ['^DJI', 'Dow Jones'], ['^IXIC', 'Nasdaq'], ['^N225', 'Nikkei 225'], ['^HSI', 'Hang Seng'],
 ];
+// Weather: MET Norway's free forecast API (CC BY 4.0, commercial use allowed with credit). It requires a
+// User-Agent that identifies the site, and at most 4 decimals in coordinates.
+const WEATHER_UA = 'PHTrendWatch/1.0 https://phtrendwatch.world';
+const weatherUrl = ([lat, lon]) => `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
+const MANILA_TZ = 'Asia/Manila';
+const WEATHER_GROUPS = [
+  { title: 'Philippines', cities: [
+    ['Manila', [14.5995, 120.9842], MANILA_TZ], ['Pampanga (San Fernando)', [15.0286, 120.6898], MANILA_TZ],
+    ['Visayas (Cebu City)', [10.3157, 123.8854], MANILA_TZ], ['Davao City', [7.1907, 125.4553], MANILA_TZ],
+  ] },
+  { title: 'Around the world', cities: [
+    ['Sydney, Australia', [-33.8688, 151.2093], 'Australia/Sydney'], ['New York, USA', [40.7128, -74.006], 'America/New_York'],
+    ['Toronto, Canada', [43.6532, -79.3832], 'America/Toronto'], ['London, UK', [51.5074, -0.1278], 'Europe/London'],
+    ['Berlin, Germany', [52.52, 13.405], 'Europe/Berlin'],
+  ] },
+];
+const CITIES = WEATHER_GROUPS.flatMap((g) => g.cities.map((c) => [...c, g.title]));
 const espn = (path) => `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
 const LEAGUES = [
   { title: 'NBA', url: espn('basketball/nba') },
@@ -140,6 +158,41 @@ async function loadQuote([symbol, name]) {
   if (typeof price !== 'number') throw new Error(`no price for ${symbol}`);
   return { name, price, change: typeof prev === 'number' && prev ? (price - prev) / prev * 100 : null,
     time: new Date(meta.regularMarketTime * 1000) };
+}
+
+// A forecast time as the city's own calendar day (YYYY-MM-DD) and hour, so each city's outlook follows its local days.
+const localDay = (iso, tz) => new Date(iso).toLocaleDateString('en-CA', { timeZone: tz });
+const localHour = (iso, tz) => Number(new Date(iso).toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false })) % 24;
+
+async function loadWeather([name, coords, tz, group]) {
+  const res = await fetch(weatherUrl(coords), { headers: { 'user-agent': WEATHER_UA }, signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const series = (await res.json()).properties?.timeseries ?? [];
+  if (!series.length) throw new Error(`no forecast for ${name}`);
+  const now = series[0];
+  const days = new Map();
+  for (const point of series) {
+    const day = localDay(point.time, tz);
+    const temp = point.data.instant.details.air_temperature;
+    const entry = days.get(day) ?? { day, min: temp, max: temp, symbol: null };
+    entry.min = Math.min(entry.min, temp);
+    entry.max = Math.max(entry.max, temp);
+    // Describe the day by the 6-hour forecast starting around local midday (later points are 6-hourly).
+    const sixHour = point.data.next_6_hours?.summary?.symbol_code;
+    const hour = localHour(point.time, tz);
+    if (sixHour && (!entry.symbol || (hour >= 10 && hour <= 13))) entry.symbol = sixHour;
+    days.set(day, entry);
+  }
+  return {
+    name,
+    tz,
+    group,
+    temp: now.data.instant.details.air_temperature,
+    humidity: now.data.instant.details.relative_humidity,
+    symbol: now.data.next_1_hours?.summary?.symbol_code ?? now.data.next_6_hours?.summary?.symbol_code,
+    rain6h: now.data.next_6_hours?.details?.precipitation_amount ?? null,
+    days: [...days.values()].slice(0, 4),
+  };
 }
 
 async function loadPseStocks() {
@@ -220,6 +273,47 @@ function marketsBlock({ forex, stocks, indices }) {
 ${sources ? `<p class="source">Delayed prices for information only, not investment advice (${sources}).</p>` : ''}</div></div></section>`;
 }
 
+const WEATHER_ICONS = [
+  ['thunder', '⛈️', 'Thunderstorms'], ['heavyrain', '🌧️', 'Heavy rain'], ['rainshowers', '🌦️', 'Rain showers'],
+  ['lightrain', '🌦️', 'Light rain'], ['rain', '🌧️', 'Rain'], ['fog', '🌫️', 'Fog'], ['clearsky', '☀️', 'Clear'],
+  ['fair', '🌤️', 'Fair'], ['partlycloudy', '⛅', 'Partly cloudy'], ['cloudy', '☁️', 'Cloudy'],
+];
+function weatherIcon(symbol) {
+  const base = (symbol ?? '').replace(/_(day|night|polartwilight)$/, '');
+  const [, icon, label] = WEATHER_ICONS.find(([key]) => base.includes(key)) ?? ['', '🌡️', 'Forecast'];
+  return { icon, label };
+}
+
+const clockText = (date, tz) => date.toLocaleString('en-PH', { timeZone: tz, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+
+function weatherBlock(cities) {
+  if (!cities.length) return '';
+  const weekday = (day) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'UTC' });
+  const card = (c) => {
+    const now = weatherIcon(c.symbol);
+    const today = c.days[0];
+    const outlook = c.days.slice(1, 4).map((d) => {
+      const w = weatherIcon(d.symbol);
+      return `<li><span>${esc(weekday(d.day))}</span><span title="${esc(w.label)}">${w.icon}</span><span>${Math.round(d.max)}° / ${Math.round(d.min)}°</span></li>`;
+    }).join('');
+    return `<div class="wx"><div class="wx-now"><span class="wx-icon" aria-hidden="true">${now.icon}</span><div><h3>${esc(c.name)}</h3>
+<p><b>${Math.round(c.temp)}°C</b> ${esc(now.label)}</p></div></div>
+<p class="wx-time">Local time: <span class="clock" data-tz="${esc(c.tz)}">${esc(clockText(new Date(), c.tz))}</span></p>
+<p class="wx-meta">Rest of today ${Math.round(today.max)}° / ${Math.round(today.min)}° · Humidity ${Math.round(c.humidity)}%${c.rain6h != null ? ` · Rain next 6h: ${num(c.rain6h, 1)} mm` : ''}</p>
+<ul class="wx-days">${outlook}</ul></div>`;
+  };
+  const groups = WEATHER_GROUPS.map((g) => [g.title, cities.filter((c) => c.group === g.title)])
+    .filter(([, list]) => list.length)
+    .map(([title, list]) => `<h3 class="wx-group">${esc(title)}</h3><div class="wx-grid">${list.map(card).join('')}</div>`).join('');
+  // Clocks are filled in by the visitor's browser so they stay current between the 30-minute rebuilds.
+  const clocks = `<script>(function(){function tick(){document.querySelectorAll('.clock').forEach(function(t){`
+    + `t.textContent=new Date().toLocaleString('en-PH',{timeZone:t.dataset.tz,weekday:'short',hour:'numeric',minute:'2-digit'})})}`
+    + `tick();setInterval(tick,30000)})();</script>`;
+  return `<section id="weather"><h2>Weather &amp; world time</h2><p class="intro">Current conditions, local time and the 3-day outlook in the Philippines and the countries where many Filipinos live and work. For typhoon signals and warnings, always follow <a href="https://www.pagasa.dost.gov.ph" target="_blank" rel="noopener">PAGASA</a> — see our <a href="typhoon-signals-preparedness.html">typhoon signals guide</a>.</p>
+${groups}
+<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Days follow each city's local calendar.</p>${clocks}</section>`;
+}
+
 function scoresBlock(leagues) {
   const withGames = leagues.filter((l) => l.games.length);
   if (!withGames.length) return '';
@@ -287,6 +381,19 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .data-grid th:first-child,.data-grid td:first-child{text-align:left}
 .data-grid small{color:var(--muted)}
 .up{color:#178a3e}.down{color:var(--accent)}
+.wx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.wx{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wx-now{display:flex;gap:10px;align-items:center}
+.wx-icon{font-size:2rem;line-height:1}
+.wx h3{margin:0;font-size:1rem}
+.wx-now p{margin:2px 0 0}
+.wx-now b{font-size:1.25rem}
+.wx-meta{margin:4px 0 8px;color:var(--muted);font-size:.8rem}
+.wx-time{margin:8px 0 0;font-size:.85rem;font-weight:600}
+.wx-group{margin:16px 0 8px;font-size:.95rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.wx-days{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:.88rem}
+.wx-days li{display:grid;grid-template-columns:3em 1.8em 1fr;align-items:center}
+.wx-days li span:last-child{text-align:right}
 .games{list-style:none;margin:0;padding:0;font-size:.9rem}
 .games li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .when{color:var(--muted);font-size:.8rem;white-space:nowrap}
@@ -348,7 +455,9 @@ function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
   const adAccount = (AD_CLIENT ? `<meta name="google-adsense-account" content="${esc(AD_CLIENT)}">` : '')
     + (GOOGLE_VERIFY ? `<meta name="google-site-verification" content="${esc(GOOGLE_VERIFY)}">` : '')
     + (BING_VERIFY ? `<meta name="msvalidate.01" content="${esc(BING_VERIFY)}">` : '');
-  const ld = schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '';
+  const analytics = GA_ID ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${esc(GA_ID)}"></script>`
+    + `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${esc(GA_ID)}');</script>` : '';
+  const ld = schema ?`<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '';
 
   return `<!doctype html>
 <html lang="en">
@@ -366,6 +475,7 @@ ${canonical}
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 ${adAccount}
 ${ld}
+${analytics}
 ${adScript}
 <style>${STYLE}</style>
 <script>${THEME_INIT}</script>
@@ -393,16 +503,19 @@ ${body}
 `;
 }
 
-function home({ sections, trends, builtAt, markets, scores }) {
+function home({ sections, trends, builtAt, markets, scores, weather }) {
   const marketsHtml = marketsBlock(markets);
   const scoresHtml = scoresBlock(scores);
-  // Markets follow Business and scores follow Sports; if a section is missing they go at the end.
-  const after = { business: marketsHtml, sports: scoresHtml };
+  const weatherHtml = weatherBlock(weather);
+  // Weather follows Philippines, markets follow Business and scores follow Sports; if a section is missing they go
+  // at the end.
+  const after = { philippines: weatherHtml, business: marketsHtml, sports: scoresHtml };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
   const mainHtml = sections.map(({ sec, articles }, i) => section(sec, articles) + (after[sec.id] ?? '')
     + (i === 1 ? promoBlocks() : '')).join('\n') + extras;
-  const dataLinks = (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
+  const dataLinks = (weatherHtml ? '<a href="#weather">Weather</a>' : '')
+    + (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
   const sidebar = ad('sidebar') + ad('sidebar');
@@ -458,7 +571,8 @@ function sideMenu(file) {
   const home = file === 'index.html' ? '' : './'; // section anchors live on the home page
   const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
   const news = SECTIONS.map((s) => link(`${home}#${s.id}`, s.title)).join('');
-  const data = link(`${home}#markets`, 'Markets: peso & stocks') + link(`${home}#scores`, 'Scores: NBA & football');
+  const data = link(`${home}#weather`, 'Weather forecast') + link(`${home}#markets`, 'Markets: peso & stocks')
+    + link(`${home}#scores`, 'Scores: NBA & football');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
     + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
     + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
@@ -466,12 +580,13 @@ function sideMenu(file) {
     + GUIDES.slice(0, 3).map((g) => link(`${g.slug}.html`, g.title.split(':')[0], file === `${g.slug}.html`)).join('');
   return `<div class="side"><button type="button" class="side-toggle" id="side-toggle" aria-expanded="false" aria-controls="side-list">`
     + `Menu: news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
-    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Markets &amp; scores</h2>${data}`
+    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Weather, markets &amp; scores</h2>${data}`
     + `${tools}<h2>Guides</h2>${guides}</nav></div>`;
 }
 
 function promoBlocks() {
-  const guides = GUIDES.map((g) => `<li><a href="${g.slug}.html">${esc(g.title)}</a></li>`).join('');
+  const guides = GUIDES.slice(0, 6).map((g) => `<li><a href="${g.slug}.html">${esc(g.title)}</a></li>`).join('')
+    + '<li><a href="guides.html">All guides →</a></li>';
   const tools = TOOL_LINKS.map(([path, label]) => `<li><a href="${TOOLS_URL}/${path}">${esc(label)}</a></li>`).join('');
   return `<div class="promo"><h2>Guides from ${esc(SITE_NAME)}</h2><ul>${guides}</ul></div>
 <div class="promo"><h2>Free tools</h2><ul>${tools}</ul></div>`;
@@ -529,7 +644,7 @@ function infoPages(builtAt) {
 </ul>
 <h2>How it works</h2>
 <p>The page refreshes about every 30 minutes. Headlines come from Google News and trending searches from Google Trends. Every headline links straight to the publisher's own website, where you can read the full story. ${name} does not copy or rewrite other publishers' articles.</p>
-<p>The Markets and Scores sections show peso exchange rates, Philippine and world stock prices, and NBA and football games, from the sources named under each table.</p>
+<p>The Weather, Markets and Scores sections show city forecasts, peso exchange rates, Philippine and world stock prices, and NBA and football games, from the sources named under each one.</p>
 <h2>Our own guides and tools</h2>
 <p>Alongside the headlines, we publish <a href="guides.html">practical guides</a> on money and work in the Philippines — such as how to compute your 13th month pay and how to compare loan interest rates — and a set of <a href="${TOOLS_URL}/">free calculators</a> that run right in your browser.</p>
 <p>${name} is independent and is not affiliated with any of the publishers it links to.</p>
@@ -581,6 +696,8 @@ function infoPages(builtAt) {
   <li>You can opt out of personalised advertising in <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>. You can also opt out of some third-party vendors' use of cookies for personalised advertising at <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info</a>.</li>
 </ul>
 <p>To learn more, read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses information from sites that use its services</a>. You can also block or delete cookies in your browser settings.</p>
+${GA_ID ? `<h2>Analytics</h2>
+<p>We use Google Analytics to understand how visitors use the site, such as which pages are read most. It uses cookies to collect information like pages visited, time on site, device and approximate location (country or city). This information is aggregated and does not identify you personally. You can opt out with the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics opt-out browser add-on</a>.</p>` : ''}
 <h2>Links to other websites</h2>
 <p>Headlines link to other publishers' websites. Their own privacy policies apply when you visit them.</p>
 <h2>Children</h2>
@@ -612,18 +729,19 @@ if (!sections.length) {
 }
 
 const skip = (what) => (err) => (console.warn(`Skipping ${what}: ${err.message}`), null);
-const [trends, forex, stocks, indices, scores] = await Promise.all([
+const [trends, forex, stocks, indices, scores, weather] = await Promise.all([
   loadTrends().catch((err) => (console.warn(`Skipping trends: ${err.message}`), [])),
   loadForex().catch(skip('forex')),
   loadPseStocks().catch((err) => (console.warn(`Skipping PSE stocks: ${err.message}`), [])),
   settledValues(WORLD_INDICES.map(loadQuote)),
   settledValues(LEAGUES.map(loadScores)),
+  settledValues(CITIES.map(loadWeather)),
 ]);
 const builtAt = new Date();
 const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
-await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores }));
+await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
 if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
@@ -638,4 +756,5 @@ if (SITE_URL) {
 
 console.log(`Built dist/: ${sections.reduce((n, s) => n + s.articles.length, 0)} headlines, ${trends.length} trends, `
   + `${forex ? forex.rows.length : 0} rates, ${stocks.length + indices.length} quotes, `
-  + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${PAGES.length} info pages, ${GUIDES.length} guides.`);
+  + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${weather.length} weather cities, `
+  + `${PAGES.length} info pages, ${GUIDES.length} guides.`);

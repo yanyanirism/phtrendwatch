@@ -33,6 +33,7 @@ jobs:
           GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
           BING_SITE_VERIFICATION: ${{ vars.BING_SITE_VERIFICATION }}
           INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
+          GA_MEASUREMENT_ID: ${{ vars.GA_MEASUREMENT_ID }}
           AD_EVERY: ${{ vars.AD_EVERY }}
           ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
           ADSENSE_SLOT_TOP: ${{ vars.ADSENSE_SLOT_TOP }}
