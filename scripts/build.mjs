@@ -1,6 +1,6 @@
 // Builds the static site into dist/ from live RSS feeds. Run on a schedule (see .github/workflows/deploy.yml).
 import { mkdir, writeFile } from 'node:fs/promises';
-import { CHANNELS } from './channels.mjs';
+import { CHANNELS, SERVICES } from './channels.mjs';
 import { GUIDES, GUIDE_TOPICS } from './guides.mjs';
 
 try { process.loadEnvFile(); } catch { /* no .env file: rely on the real environment */ }
@@ -822,12 +822,16 @@ function infoPages(builtAt) {
     `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(platform)}</a>`).join(' · ');
   const channelList = `<ul class="guide-list">${CHANNELS.map((c) => `<li><b>${esc(c.name)}</b>`
     + `${c.about ? `<span>${esc(c.about)}</span>` : ''}<span>${channelLinks(c)}</span></li>`).join('')}</ul>`;
+  const services = `<h2 id="work-with-us">Work with us</h2>
+<p>The team behind ${name} also builds websites, apps and AI solutions for businesses and creators:</p>
+<ul class="guide-list">${SERVICES.map(([title, text]) => `<li><b>${esc(title)}</b><span>${esc(text)}</span></li>`).join('')}</ul>
+<p>To discuss a project, email ${email} or see our <a href="contact.html">Contact</a> page.</p>`;
 
   return {
     'affiliates.html': infoPage('affiliates.html', 'Our Affiliates & Other Content', `
 <p>${name} is part of a small family of channels and pages. Follow us for learning videos, quotes, stories and more.</p>
 ${channelList}
-<p>Want to work with us? See our <a href="contact.html">Contact</a> page.</p>`,
+${services}`,
     { description: `Channels and pages from the team behind ${SITE_NAME}: The Pebble Minds, Echoes and Obsidian, Yanyanirism and more.` }),
 
     'about.html': infoPage('about.html', 'About Us', `
@@ -846,6 +850,7 @@ ${channelList}
 <h2>Our other content</h2>
 <p>The team behind ${name} also creates content on these channels — see <a href="affiliates.html">our affiliates and other content</a>.</p>
 ${channelList}
+${services}
 <h2>Get in touch</h2>
 <p>Questions, corrections or suggestions? See the <a href="contact.html">Contact</a> page.</p>`),
 
