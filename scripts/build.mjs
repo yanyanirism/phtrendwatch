@@ -1,5 +1,6 @@
 // Builds the static site into dist/ from live RSS feeds. Run on a schedule (see .github/workflows/deploy.yml).
-import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { CHANNELS, SERVICES } from './channels.mjs';
 import { GUIDES, GUIDE_TOPICS } from './guides.mjs';
 
@@ -537,6 +538,8 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .search button{padding:8px 14px;border:0;border-radius:999px;background:var(--accent-2);color:#fff;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
 .search+.theme-toggle{margin-left:0}
 @media (max-width:640px){.search{order:3;flex-basis:100%;max-width:none;margin-left:0}}
+.channel-list li{display:flex;gap:14px;align-items:center}
+.avatar{flex:none;border-radius:50%;border:1px solid var(--line);object-fit:cover}
 .guide-list{list-style:none;padding:0;margin:0 0 8px}
 .guide-list li{padding:10px 0;border-bottom:1px solid var(--line)}
 .guide-list li a{font-weight:700}
@@ -820,8 +823,13 @@ function infoPages(builtAt) {
   const email = CONTACT_EMAIL ? `<a href="mailto:${esc(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>` : 'our email address (coming soon)';
   const channelLinks = (c) => c.links.map(([platform, url]) =>
     `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(platform)}</a>`).join(' · ');
-  const channelList = `<ul class="guide-list">${CHANNELS.map((c) => `<li><b>${esc(c.name)}</b>`
-    + `${c.about ? `<span>${esc(c.about)}</span>` : ''}<span>${channelLinks(c)}</span></li>`).join('')}</ul>`;
+  // Profile pictures live in assets/channels/<name-as-slug>.jpg; a channel without one just shows its name.
+  const channelIcon = (c) => {
+    const file = `assets/channels/${c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.jpg`;
+    return existsSync(file) ? `<img class="avatar" src="${file}" alt="${esc(c.name)} profile picture" width="56" height="56" loading="lazy">` : '';
+  };
+  const channelList = `<ul class="guide-list channel-list">${CHANNELS.map((c) => `<li>${channelIcon(c)}<div><b>${esc(c.name)}</b>`
+    + `${c.about ? `<span>${esc(c.about)}</span>` : ''}<span>${channelLinks(c)}</span></div></li>`).join('')}</ul>`;
   const services = `<h2 id="work-with-us">Work with us</h2>
 <p>The team behind ${name} also builds websites, apps and AI solutions for businesses and creators:</p>
 <ul class="guide-list">${SERVICES.map(([title, text]) => `<li><b>${esc(title)}</b><span>${esc(text)}</span></li>`).join('')}</ul>
@@ -948,6 +956,7 @@ const builtAt = new Date();
 const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
+await cp('assets', 'dist/assets', { recursive: true });
 await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather, gaming, tech,
   fuel: { news: fuelNews, crude } }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
