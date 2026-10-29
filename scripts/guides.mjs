@@ -473,13 +473,352 @@ const ALL_GUIDES = [
 </ul>
 <p class="note">Signal definitions follow PAGASA's tropical cyclone wind signal system. Always follow official advisories and evacuation orders.</p>`,
   },
+  {
+    slug: 'gaming-scams-free-robux',
+    title: '"Free Robux" and Other Gaming Scams: How to Spot and Avoid Them',
+    description: 'The most common gaming scams targeting Filipino players — free Robux, free diamonds, fake top-ups and account trades — and how to stay safe.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> there is no such thing as free Robux, free diamonds or free in-game currency from a website, app or stranger. Every "generator" or giveaway that asks for your login, a verification step or a small payment is a scam. Get in-game currency only from the game itself or official stores and top-up partners.</p>
+<h2>The most common scams</h2>
+<ul>
+  <li><b>"Free Robux / free diamonds" generators:</b> websites or videos promising free currency if you enter your username and password, complete "human verification" surveys or download an app. They steal your account or earn money from your clicks — you never get the currency.</li>
+  <li><b>Fake top-up sellers:</b> cheap currency offered on social media or chat groups. You pay by e-wallet and receive nothing, or the currency came from a stolen card and the game removes it later and may ban your account.</li>
+  <li><b>Account trading:</b> buying or selling accounts usually breaks the game's rules, and sellers can take the account back by recovering it with the original email.</li>
+  <li><b>Fake moderators or admins:</b> messages saying your account will be banned unless you "verify" by logging in through a link.</li>
+  <li><b>Trade scams:</b> in games with item trading, scammers switch items at the last second or ask you to "go first".</li>
+</ul>
+<h2>Warning signs</h2>
+<ul>
+  <li>Anyone asking for your <b>password</b> or a <b>verification code</b> sent to your phone or email.</li>
+  <li>Prices that are far below the official price.</li>
+  <li>Pressure to act quickly: "only 10 slots left", "your account will be deleted today".</li>
+  <li>Links that look almost like the official site but with extra letters or a different ending.</li>
+</ul>
+<h2>How to stay safe</h2>
+<ol>
+  <li>Buy currency only inside the game, from official app stores, or from the game's official top-up partners.</li>
+  <li>Never share your password or one-time codes — no real staff member will ask for them.</li>
+  <li>Turn on two-step verification. See our guide to <a href="protect-gaming-accounts.html">protecting your gaming accounts</a>.</li>
+  <li>Report scam messages and accounts using the game's report button.</li>
+</ol>
+<h2>For parents</h2>
+<p>Young players are the main target of "free Robux" scams. Talk with your kids about why free currency offers are fake, set spending limits and parental controls in the game and on app stores, and ask them to tell you before entering their password anywhere new.</p>
+<h2>If you've been scammed</h2>
+<p>Change your password straight away, turn on two-step verification, and contact the game's official support. If you lost money through an e-wallet or bank, report it to the provider immediately. You can also report online scams to the PNP Anti-Cybercrime Group or the Cybercrime Investigation and Coordinating Center (CICC).</p>
+<p class="note">This guide is general safety information. Roblox, Robux and other game names are trademarks of their owners; this site is not affiliated with them.</p>`,
+  },
+  {
+    slug: 'protect-gaming-accounts',
+    title: 'How to Protect Your Gaming Accounts from Hackers',
+    description: 'Simple steps to keep your Roblox, Mobile Legends, Valorant, Steam and other gaming accounts safe: passwords, two-step verification and safe logins.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> use a different strong password for every game, turn on two-step verification, keep your email account secure, and always log out on shared computers like those in internet cafés and pisonet shops.</p>
+<h2>1. Use a unique password for each account</h2>
+<p>If one site leaks your password, attackers try it on every popular game and email service. A long passphrase — four or five random words — is easy to remember and hard to guess. A password manager can remember the rest.</p>
+<h2>2. Turn on two-step verification</h2>
+<p>Most big games and platforms offer two-step verification (also called 2FA): after your password, you confirm with a code from an app, email or text. Even if someone steals your password, they can't log in without the code. Turn it on in your account's security settings.</p>
+<h2>3. Protect your email first</h2>
+<p>Your email is the key to every account — whoever controls it can reset your game passwords. Give it the strongest password you have and turn on two-step verification there too.</p>
+<h2>4. Be careful on shared computers</h2>
+<ul>
+  <li>Never tick "remember me" or let the browser save your password on a shared PC.</li>
+  <li><b>Log out</b> of games, launchers, email and social media before you leave.</li>
+  <li>If you think you forgot to log out somewhere, change your password from your own phone; many games also let you sign out of all devices.</li>
+</ul>
+<h2>5. Watch out for fake login pages</h2>
+<p>Scammers send links to pages that look exactly like a game's login. Type the official address yourself or open the official app instead of clicking links in messages, comments or chats.</p>
+<h2>6. Keep your recovery details up to date</h2>
+<p>Add a recovery email and phone number you still use. If your account is ever taken, these are often the fastest way to get it back.</p>
+<h2>If your account is hacked</h2>
+<ol>
+  <li>Try to reset the password straight away using your email or phone.</li>
+  <li>Secure your email account if it may also be affected.</li>
+  <li>Contact the game's official support with proof of ownership, such as purchase receipts.</li>
+  <li>Warn your friends — hacked accounts are often used to scam them next.</li>
+</ol>
+<p>Learn the most common traps in our guide to <a href="gaming-scams-free-robux.html">"free Robux" and other gaming scams</a>.</p>
+<p class="note">General safety information. Game names are trademarks of their owners; this site is not affiliated with them.</p>`,
+  },
+  {
+    slug: 'roblox-safety-for-parents',
+    title: 'Roblox Safety for Parents: Settings, Spending and Talking to Your Kids',
+    description: 'A practical Roblox safety guide for Filipino parents: account settings, chat and spending controls, and the conversations that keep kids safe.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> create the account with your child, enter their real birthdate so age-based protections apply, turn on parental controls (chat, spending limits and a parent PIN), and agree on simple house rules. Check the official <a href="https://about.roblox.com/parental-controls" target="_blank" rel="noopener">Roblox parental controls page</a> for the current options.</p>
+<h2>Why it matters</h2>
+<p>Roblox is a platform where millions of players make and share their own games. Most experiences are fun and creative, but players can chat with strangers and spend real money, so a few minutes of setup makes a big difference.</p>
+<h2>Set up the account together</h2>
+<ul>
+  <li><b>Use the real birthdate.</b> Roblox applies stricter default settings to younger players. A fake older age switches those protections off.</li>
+  <li><b>Add a parent email</b> and link a parent account where offered, so you receive notices and can manage settings.</li>
+  <li><b>Use a strong, unique password</b> and turn on two-step verification. See our guide to <a href="protect-gaming-accounts.html">protecting gaming accounts</a>.</li>
+</ul>
+<h2>Parental controls to check</h2>
+<ul>
+  <li><b>Chat:</b> limit who can message your child, or turn chat off for younger kids.</li>
+  <li><b>Experience maturity:</b> limit games to the content level that suits your child's age.</li>
+  <li><b>Spending:</b> set a monthly spending limit and notifications, and never save a card your child can use freely.</li>
+  <li><b>Parent PIN:</b> lock the settings so they can't be changed without you.</li>
+</ul>
+<h2>House rules that work</h2>
+<ol>
+  <li>Never share your real name, school, address or photos with people met in games.</li>
+  <li>Never move a chat to another app because someone in a game asked you to.</li>
+  <li>Robux are bought only with a parent — there is no "free Robux". Read our <a href="gaming-scams-free-robux.html">gaming scams guide</a> together.</li>
+  <li>If anything makes you uncomfortable, stop, take a screenshot and tell a grown-up. You won't be in trouble.</li>
+</ol>
+<h2>At internet cafés and pisonet shops</h2>
+<p>Remind kids to log out completely when their time ends and never tick "remember me" on a shared computer.</p>
+<h2>Reporting problems</h2>
+<p>Use the in-game <b>Report</b> button for inappropriate chat or behaviour, and block the user. For threats or exploitation, contact the authorities — in the Philippines, the PNP Women and Children Protection Center or the PNP Anti-Cybercrime Group.</p>
+<p class="note">General safety information. Roblox's settings and names change over time; check Roblox's official parental controls page for the current options. Roblox is a trademark of Roblox Corporation; this site is not affiliated with it.</p>`,
+  },
+  {
+    slug: 'valorant-beginners-guide',
+    title: 'Valorant for Beginners: Agents, Economy and Tips to Win More Rounds',
+    description: 'A beginner-friendly Valorant guide: how a match works, the four agent roles, the buy economy and simple habits that win more rounds.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> Valorant is a 5-versus-5 tactical shooter. One team attacks and tries to plant the Spike; the other defends. Win rounds by playing with your team, keeping your crosshair at head height, and buying smartly between rounds. Check the official <a href="https://playvalorant.com/en-us/news/tags/patch-notes/" target="_blank" rel="noopener">patch notes</a> after each update.</p>
+<h2>How a match works</h2>
+<ul>
+  <li>Teams swap between attacking and defending halfway through the match.</li>
+  <li>Attackers win a round by planting the Spike and letting it detonate, or by eliminating the defenders.</li>
+  <li>Defenders win by defusing the Spike, eliminating the attackers, or running out the clock.</li>
+</ul>
+<h2>The four agent roles</h2>
+<ul>
+  <li><b>Duelists</b> lead the way into sites and take fights.</li>
+  <li><b>Initiators</b> gather information and break defensive positions so the team can enter.</li>
+  <li><b>Controllers</b> block vision with smokes and walls to shape the fight.</li>
+  <li><b>Sentinels</b> hold areas, watch flanks and slow down enemy pushes.</li>
+</ul>
+<p>Learn one or two agents well instead of switching every game.</p>
+<h2>The economy in one minute</h2>
+<p>You earn credits each round — more for winning, kills and planting. When money is low, the whole team "saves" (buys little) so everyone can afford full weapons and shields together next round. Buying alone while your team saves usually loses both rounds.</p>
+<h2>Five habits that win more rounds</h2>
+<ol>
+  <li><b>Crosshair placement:</b> keep your aim at head height where enemies will appear.</li>
+  <li><b>Stop before you shoot:</b> moving makes most guns inaccurate.</li>
+  <li><b>Call out what you see:</b> enemy count and location, short and clear.</li>
+  <li><b>Trade your teammates:</b> stay close enough to punish the enemy who takes a fight.</li>
+  <li><b>Warm up</b> in the Range for a few minutes before playing ranked.</li>
+</ol>
+<h2>Play nice, play safe</h2>
+<p>Mute toxic players instead of arguing, never share your account, and buy Valorant Points only through the game or official partners. See our <a href="gaming-scams-free-robux.html">gaming scams guide</a>.</p>
+<p class="note">General gameplay tips. Agents, weapons and prices change with patches. Valorant is a trademark of Riot Games; this site is not affiliated with it.</p>`,
+  },
+  {
+    slug: 'dota-2-beginners-guide',
+    title: 'Dota 2 for Beginners: Roles, Last Hits and How to Improve',
+    description: 'A plain Dota 2 guide for new players: what you are trying to do, the five positions, last hits and denies, and how to keep improving.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> Dota 2 is a 5-versus-5 strategy game where each team defends its Ancient. Pick a simple hero, learn your role, practise last hits for gold, and stick with your team. Patch changes are listed on the official <a href="https://www.dota2.com/patches" target="_blank" rel="noopener">Dota 2 patches page</a>.</p>
+<h2>The goal</h2>
+<p>Each team starts at opposite corners of the map. Three lanes connect the bases, guarded by towers. Push down the lanes, destroy the enemy buildings and finally their Ancient to win.</p>
+<h2>The five positions</h2>
+<ul>
+  <li><b>Position 1 (carry):</b> farms gold early and becomes the strongest hero late in the game.</li>
+  <li><b>Position 2 (mid):</b> plays the middle lane alone and makes plays around the map.</li>
+  <li><b>Position 3 (offlane):</b> a tough hero who disrupts the enemy carry and starts fights.</li>
+  <li><b>Positions 4 and 5 (supports):</b> protect the cores, place wards for vision and set up kills.</li>
+</ul>
+<h2>Gold basics: last hits and denies</h2>
+<p>You earn most gold by landing the <b>final hit</b> on enemy creeps. You can also <b>deny</b> your own creeps when they're low on health, so the enemy doesn't get that gold. Practising last hits in a bot or demo game is one of the fastest ways to improve.</p>
+<h2>Tips for your first games</h2>
+<ol>
+  <li>Start with heroes that are easy to play and forgiving; the hero guides in the game client suggest builds.</li>
+  <li>Buy a <b>Town Portal Scroll</b> so you can return to defend or join fights.</li>
+  <li>Watch the minimap often — most deaths come from enemies you didn't see coming.</li>
+  <li>Group up with your team in the middle and late game instead of farming alone.</li>
+  <li>Watch your own replays to spot mistakes.</li>
+</ol>
+<h2>Keep it friendly</h2>
+<p>Dota games can get heated. Mute players who flame, focus on your own play, and take a break after a few losses. See our <a href="healthy-gaming-habits-kids.html">healthy gaming habits guide</a>.</p>
+<p class="note">General gameplay tips; heroes and items change with patches. Dota 2 is a trademark of Valve Corporation; this site is not affiliated with it.</p>`,
+  },
+  {
+    slug: 'healthy-gaming-habits-kids',
+    title: 'Healthy Gaming Habits for Kids and Teens',
+    description: 'Practical tips for healthy gaming: breaks, sleep, posture, eyes, spending and balancing games with school — for players and parents.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> gaming can be fun and social when it fits around sleep, school, meals and time outdoors. Take a short break every hour, stop gaming at least an hour before bed, sit with good posture, and agree on clear limits for time and spending.</p>
+<h2>Take regular breaks</h2>
+<ul>
+  <li>Stand up, stretch and move for a few minutes every hour.</li>
+  <li>Rest your eyes with the <b>20-20-20 rule</b>: every 20 minutes, look at something about 20 feet (6 metres) away for 20 seconds.</li>
+  <li>Drink water and eat real meals — not just snacks at the computer.</li>
+</ul>
+<h2>Protect your sleep</h2>
+<p>Late-night gaming is one of the main reasons kids feel tired in school. Stop playing at least an hour before bedtime; bright screens and exciting games make it harder to fall asleep.</p>
+<h2>Set up a comfortable seat</h2>
+<ul>
+  <li>Sit back in the chair with your feet flat on the floor.</li>
+  <li>Keep the top of the screen at about eye level and an arm's length away.</li>
+  <li>Relax your shoulders and keep your wrists straight.</li>
+</ul>
+<h2>Balance games with everything else</h2>
+<p>A simple rule: homework, chores and family time first, then games. Many families agree on a daily or weekly limit and stick to it — on school nights especially.</p>
+<h2>Spending and safety</h2>
+<ul>
+  <li>Decide on a gaming budget in advance and never buy in-game items without a parent's OK.</li>
+  <li>Never share personal details with people met online. Read our guides to <a href="gaming-scams-free-robux.html">gaming scams</a> and <a href="roblox-safety-for-parents.html">Roblox safety</a>.</li>
+</ul>
+<h2>Signs it may be too much</h2>
+<p>Skipping meals or sleep, falling grades, losing interest in other activities, or getting very angry when asked to stop can mean gaming is taking over. Talk about it calmly, adjust the limits, and seek help from a school counsellor or doctor if it continues.</p>
+<p class="note">General wellbeing information, not medical advice.</p>`,
+  },
+  {
+    slug: 'gcash-ewallet-text-scams',
+    title: 'E-Wallet and Text Scams in the Philippines: How to Protect Your Money',
+    description: 'How to spot and avoid common e-wallet, bank and text message scams in the Philippines — phishing links, fake promos, wrong-send tricks and OTP theft.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> never share your <b>OTP, MPIN or password</b> with anyone, never log in through links sent by text, email or chat, and confirm any "you won" or "your account is locked" message through the official app. Real banks and e-wallets will never ask for your OTP.</p>
+<h2>The most common scams</h2>
+<ul>
+  <li><b>Phishing texts and links:</b> messages saying your account is locked, a package is on hold or you won a promo, with a link to a fake login page that steals your details.</li>
+  <li><b>OTP requests:</b> a caller pretending to be from your bank or e-wallet asks you to "confirm" a code. That code authorises a transfer out of your account.</li>
+  <li><b>"Wrong send" scams:</b> someone sends you money "by mistake" and pressures you to return it to a different number — often the money came from a stolen account, or the original transfer gets reversed.</li>
+  <li><b>Fake sellers:</b> online sellers who take payment and disappear, especially with prices that are too good to be true.</li>
+  <li><b>Job and investment offers:</b> easy-money tasks, "double your money" schemes or crypto offers that ask you to pay first.</li>
+</ul>
+<h2>How to protect yourself</h2>
+<ol>
+  <li>Open your bank or e-wallet <b>only through the official app</b> or by typing the address yourself.</li>
+  <li>Never share your OTP, MPIN or password — not even with someone claiming to be staff.</li>
+  <li>Turn on app lock, biometrics and transaction notifications.</li>
+  <li>For "wrong sends", don't send money to a new number — ask the sender to contact the e-wallet's official support to reverse it.</li>
+  <li>Check investment offers against the SEC's advisories before paying anything.</li>
+</ol>
+<h2>If you've been scammed</h2>
+<ol>
+  <li>Contact your bank or e-wallet <b>immediately</b> through the official app or hotline and ask them to block or flag the transaction.</li>
+  <li>Change your passwords and MPIN.</li>
+  <li>Report it to the Cybercrime Investigation and Coordinating Center (CICC) — its Inter-Agency Response Center hotline is <b>1326</b> — or to the PNP Anti-Cybercrime Group.</li>
+  <li>Keep screenshots of messages, numbers and receipts as evidence.</li>
+</ol>
+<p>Scammers now use AI too — see our guide to <a href="ai-deepfake-voice-scams.html">deepfake and voice-clone scams</a>.</p>
+<p class="note">General safety information. Contact your bank or e-wallet's official channels for help with your account.</p>`,
+  },
+  {
+    slug: 'ai-deepfake-voice-scams',
+    title: 'AI Scams: How to Spot Deepfake Videos and Voice-Clone Calls',
+    description: 'Scammers use AI to fake videos of celebrities and clone the voices of family members. Learn the warning signs and a simple family safety plan.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> AI can now fake a person's face and voice convincingly. Be suspicious of any urgent request for money — even from a familiar voice or a famous face — and verify it through another channel before acting. A family "safe word" stops most voice-clone scams.</p>
+<h2>Deepfake videos</h2>
+<p>Scammers use AI-made videos of celebrities, officials or news anchors to promote fake investments, miracle products or giveaways. Warning signs:</p>
+<ul>
+  <li>A famous person suddenly promoting a "guaranteed" investment or crypto scheme.</li>
+  <li>Lips slightly out of sync, odd blinking, blurry edges around the face, or a voice that sounds flat.</li>
+  <li>The video appears only in ads or unknown pages, not on the person's official accounts.</li>
+</ul>
+<h2>Voice-clone calls</h2>
+<p>A few seconds of someone's voice from social media is enough to clone it. Scammers call pretending to be a child, parent or boss in trouble — an accident, an arrest, a hospital bill — and ask for money right away.</p>
+<ul>
+  <li><b>Hang up and call back</b> on the number you already have for that person.</li>
+  <li>Ask a question only the real person would know.</li>
+  <li>Be wary of pressure, secrecy ("don't tell anyone") and unusual payment methods.</li>
+</ul>
+<h2>Make a family safe word</h2>
+<p>Agree on a word or phrase that your family will use in a real emergency. If a caller can't say it, it isn't them. Keep it private and never post it online.</p>
+<h2>Protect your own voice and face</h2>
+<ul>
+  <li>Keep social media accounts private where you can, and limit public videos of children.</li>
+  <li>Be careful with "fun" apps that ask for many photos or voice recordings.</li>
+</ul>
+<h2>Report it</h2>
+<p>Report scam videos and accounts on the platform where you saw them. If you lost money, contact your bank or e-wallet immediately and report to the CICC hotline <b>1326</b> or the PNP Anti-Cybercrime Group. More tips are in our <a href="gcash-ewallet-text-scams.html">e-wallet and text scams guide</a>.</p>
+<p class="note">General safety information.</p>`,
+  },
+  {
+    slug: 'ai-chatbots-for-school-and-work',
+    title: 'How to Use AI Chatbots for School and Work (Without Getting Into Trouble)',
+    description: 'A practical guide to AI assistants like ChatGPT, Gemini, Claude and Copilot: what they are good at, their limits, privacy, and using them honestly for school.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> AI chatbots such as ChatGPT, Gemini, Claude and Microsoft Copilot are great for explaining topics, brainstorming, drafting and checking your writing. They can also be confidently wrong, so check important facts, keep private information out, and follow your school's or employer's rules on AI use.</p>
+<h2>What AI chatbots are good at</h2>
+<ul>
+  <li><b>Explaining:</b> "Explain photosynthesis like I'm in Grade 6" or "What does this Excel formula do?"</li>
+  <li><b>Brainstorming:</b> ideas for a project, a business name or a birthday plan.</li>
+  <li><b>First drafts:</b> emails, letters, outlines and résumés that you then edit in your own words.</li>
+  <li><b>Practice:</b> quiz questions for an exam, or a mock job interview.</li>
+  <li><b>Fixing writing:</b> grammar, clarity and translating between English and Filipino.</li>
+</ul>
+<h2>Know the limits</h2>
+<ul>
+  <li><b>They make mistakes.</b> Chatbots can invent facts, numbers, quotes and sources. Double-check anything important against a reliable source.</li>
+  <li><b>They may be out of date.</b> Ask for sources, and check the date for news, laws and prices.</li>
+  <li><b>They don't replace professionals</b> for medical, legal or financial decisions.</li>
+</ul>
+<h2>Keep your information private</h2>
+<p>Don't paste passwords, ID numbers, bank details, private photos or confidential work documents into a chatbot. At work, use only the AI tools your company allows.</p>
+<h2>Using AI honestly at school</h2>
+<ul>
+  <li>Check your teacher's rules — some allow AI for research, others don't allow it at all.</li>
+  <li>Use AI to <b>understand</b> and <b>practise</b>, not to submit work as your own.</li>
+  <li>If you used AI, say how — many schools ask students to disclose it.</li>
+</ul>
+<h2>Free or paid?</h2>
+<p>Most popular chatbots have free versions that are enough for everyday use; paid plans add more usage and features. Try a free version first.</p>
+<p>Want better answers? Read our guide to <a href="ai-prompt-writing-tips.html">writing better AI prompts</a>.</p>
+<p class="note">General information. Product names are trademarks of their owners; this site is not affiliated with them.</p>`,
+  },
+  {
+    slug: 'ai-prompt-writing-tips',
+    title: 'How to Write Better AI Prompts: 7 Simple Tips',
+    description: 'Get better answers from ChatGPT, Gemini, Claude and other AI tools with seven easy prompt-writing tips and before-and-after examples.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> tell the AI who the answer is for, what you need, the format you want, and any important details. Then refine with follow-up questions. A clear request gets a clear answer.</p>
+<h2>1. Give context</h2>
+<p><b>Instead of:</b> "Write a letter."<br><b>Try:</b> "Write a short, polite letter to my landlord in Quezon City asking to fix a leaking roof before the rainy season."</p>
+<h2>2. Say who it's for</h2>
+<p>"Explain inflation for a Grade 8 student" gets a very different answer from "Explain inflation for an economics graduate".</p>
+<h2>3. Ask for a format</h2>
+<p>Bullet points, a table, a step-by-step list, or "under 100 words". For example: "Give me a table comparing three budget phones under ₱10,000 by battery, camera and storage."</p>
+<h2>4. Share examples</h2>
+<p>Paste a sample of the style you like — "write it in a tone like this paragraph" — and the AI will match it.</p>
+<h2>5. Break big tasks into steps</h2>
+<p>Ask for an outline first, then each section. You'll get better results and can correct the direction early.</p>
+<h2>6. Ask it to check itself</h2>
+<p>Follow-ups like "What could be wrong with this answer?" or "Which facts here should I double-check?" help catch mistakes.</p>
+<h2>7. Iterate</h2>
+<p>Your first prompt is a starting point. Say what to change: "shorter", "more formal", "add an example", "in Filipino".</p>
+<h2>A full example</h2>
+<p>"I'm a pisonet owner in Pampanga. Write a friendly 3-sentence sign in Taglish reminding customers to log out of their accounts before leaving. Keep it simple for kids to understand."</p>
+<p>Remember to keep private information out of prompts, and double-check important facts. More in our guide to <a href="ai-chatbots-for-school-and-work.html">using AI chatbots for school and work</a>.</p>
+<p class="note">General information. Product names are trademarks of their owners; this site is not affiliated with them.</p>`,
+  },
 ];
 
 const GUIDES_ORDER = [
-  'christmas-budget-guide', '13th-month-pay-guide', 'holiday-pay-rules', 'payroll-deductions-guide',
-  'overtime-night-differential', 'budget-50-30-20-philippines', 'emergency-fund-guide', 'pag-ibig-mp2-guide',
-  'add-on-vs-diminishing-interest', 'ofw-remittance-tips', 'peso-exchange-rates-explained',
-  'psei-stock-investing-basics', 'typhoon-signals-preparedness', 'how-to-spot-fake-news',
+  'christmas-budget-guide', '13th-month-pay-guide', 'gaming-scams-free-robux', 'gcash-ewallet-text-scams',
+  'ai-chatbots-for-school-and-work', 'holiday-pay-rules', 'roblox-safety-for-parents', 'payroll-deductions-guide',
+  'ai-deepfake-voice-scams', 'valorant-beginners-guide', 'overtime-night-differential', 'dota-2-beginners-guide',
+  'budget-50-30-20-philippines', 'protect-gaming-accounts', 'ai-prompt-writing-tips', 'healthy-gaming-habits-kids',
+  'emergency-fund-guide', 'pag-ibig-mp2-guide', 'add-on-vs-diminishing-interest', 'ofw-remittance-tips',
+  'peso-exchange-rates-explained', 'psei-stock-investing-basics', 'typhoon-signals-preparedness', 'how-to-spot-fake-news',
+];
+
+// Topic groups for the guides page, in display order.
+export const GUIDE_TOPICS = [
+  ['Money & work', ['christmas-budget-guide', '13th-month-pay-guide', 'holiday-pay-rules', 'payroll-deductions-guide',
+    'overtime-night-differential', 'budget-50-30-20-philippines', 'emergency-fund-guide', 'pag-ibig-mp2-guide',
+    'add-on-vs-diminishing-interest', 'ofw-remittance-tips', 'peso-exchange-rates-explained', 'psei-stock-investing-basics']],
+  ['Gaming', ['gaming-scams-free-robux', 'protect-gaming-accounts', 'roblox-safety-for-parents', 'valorant-beginners-guide',
+    'dota-2-beginners-guide', 'healthy-gaming-habits-kids']],
+  ['Scams & online safety', ['gcash-ewallet-text-scams', 'ai-deepfake-voice-scams', 'how-to-spot-fake-news']],
+  ['Tech & AI', ['ai-chatbots-for-school-and-work', 'ai-prompt-writing-tips']],
+  ['Weather & safety', ['typhoon-signals-preparedness']],
 ];
 
 const rank = (g) => (GUIDES_ORDER.includes(g.slug) ? GUIDES_ORDER.indexOf(g.slug) : GUIDES_ORDER.length);
