@@ -29,6 +29,7 @@ jobs:
           SITE_NAME: ${{ vars.SITE_NAME }}
           SITE_URL: ${{ vars.SITE_URL }}
           CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          TOOLS_URL: ${{ vars.TOOLS_URL }}
           AD_EVERY: ${{ vars.AD_EVERY }}
           ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
           ADSENSE_SLOT_TOP: ${{ vars.ADSENSE_SLOT_TOP }}
