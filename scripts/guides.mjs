@@ -1,7 +1,8 @@
 // Original evergreen guides published alongside the headlines. Each becomes <slug>.html and is listed on guides.html.
-// `tool` links the guide to a calculator on the tools site (TOOLS_URL in build.mjs).
+// `tool` links the guide to a calculator on the tools site (TOOLS_URL in build.mjs). GUIDES_ORDER (at the end)
+// sets the order on the guides page and menus: the most timely guides first.
 
-export const GUIDES = [
+const ALL_GUIDES = [
   {
     slug: 'payroll-deductions-guide',
     title: 'SSS, PhilHealth, Pag-IBIG and Tax: Your Payslip Deductions Explained',
@@ -174,4 +175,312 @@ export const GUIDES = [
 <p>Sharing a false story — even to ask "is this true?" — helps it spread. If you can't verify it, don't forward it.</p>
 <p class="note">Spotted an error on this site? Tell us on our Contact page and we will correct it.</p>`,
   },
+  {
+    slug: 'christmas-budget-guide',
+    title: 'Christmas on a Budget: A Simple Plan for Filipino Families',
+    description: 'How to plan your Christmas spending in the Philippines — gifts, Noche Buena, aguinaldo for inaanak — without starting January in debt.',
+    updated: '2026-10-29',
+    tool: { path: 'savings-goal-calculator/', label: 'Plan your Christmas savings' },
+    body: `
+<p><b>Short answer:</b> decide one total amount for the whole season before you shop, split it into categories, and keep part of your 13th month pay for January. A written list with a peso amount next to every name is the single best way to stay on budget.</p>
+<h2>Step 1: Set one total budget</h2>
+<p>Start with what you can afford, not what you want to buy. A common approach is to use only <b>part</b> of your 13th month pay for Christmas and set the rest aside for January, when tuition, bills and post-holiday expenses arrive while the next payday still feels far away.</p>
+<h2>Step 2: Split it into categories</h2>
+<p>Most Filipino households spend in the same places. Here is an example for a ₱15,000 Christmas budget:</p>
+<ul>
+  <li><b>Gifts for family:</b> ₱5,000</li>
+  <li><b>Aguinaldo for inaanak:</b> ₱2,500 (for example, ten inaanak at ₱250)</li>
+  <li><b>Noche Buena and Media Noche:</b> ₱4,000</li>
+  <li><b>Office parties and exchange gifts:</b> ₱1,500</li>
+  <li><b>Travel home or transport:</b> ₱1,500</li>
+  <li><b>Buffer for surprises:</b> ₱500</li>
+</ul>
+<h2>Step 3: Make a list with names and amounts</h2>
+<p>Write every person you plan to give to and the amount for each. When the list adds up to more than the category budget, adjust the list — not the budget. Gift exchanges with a fixed price (for example, ₱300) keep things fair and predictable.</p>
+<h2>Ways to spend less without feeling "kuripot"</h2>
+<ul>
+  <li><b>Shop early</b> and compare prices; prices and crowds rise in the last two weeks before Christmas.</li>
+  <li><b>Check real discounts.</b> "Up to 70% off" often applies to a few items. Work out the actual sale price before buying.</li>
+  <li><b>Give homemade food or useful gifts</b> — baked goods, a meal for the family, or something the person actually needs.</li>
+  <li><b>Pool money with siblings</b> for one bigger gift for your parents instead of several small ones.</li>
+  <li><b>Use cash or a debit card</b> for Christmas shopping, so you can only spend what you have.</li>
+</ul>
+<h2>Avoid starting the year in debt</h2>
+<p>If you use a credit card, only charge what you can pay in full on the next statement. Interest on an unpaid balance quickly cancels out any holiday sale savings. If you have to borrow, compare the true cost first — see our guide on <a href="add-on-vs-diminishing-interest.html">add-on vs diminishing interest</a>.</p>
+<h2>Start next year's fund in January</h2>
+<p>Saving ₱1,250 a month from January gives you ₱15,000 by December. A small, automatic monthly transfer makes next Christmas far less stressful.</p>
+<p class="note">Amounts in this guide are examples. Adjust them to your family and income.</p>`,
+  },
+  {
+    slug: 'holiday-pay-rules',
+    title: 'Holiday Pay in the Philippines: Regular Holidays vs Special Non-Working Days',
+    description: 'How much you should be paid on regular holidays and special non-working days in the Philippines, with examples using a daily rate.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> if you work on a <b>regular holiday</b>, you get <b>200%</b> of your daily rate; if you don't work, you still get <b>100%</b>. On a <b>special non-working day</b>, you get <b>130%</b> if you work and, as a rule, nothing if you don't ("no work, no pay"), unless your company policy or contract says otherwise.</p>
+<h2>Regular holidays</h2>
+<p>Regular holidays are set by law. They include New Year's Day (1 January), Maundy Thursday, Good Friday, Araw ng Kagitingan (9 April), Labor Day (1 May), Independence Day (12 June), National Heroes Day (last Monday of August), Bonifacio Day (30 November), Christmas Day (25 December) and Rizal Day (30 December), plus Eid'l Fitr and Eid'l Adha on the dates proclaimed each year.</p>
+<ul>
+  <li><b>Did not work:</b> 100% of your daily rate, as long as you were present or on paid leave on the working day just before the holiday.</li>
+  <li><b>Worked (first 8 hours):</b> 200% of your daily rate.</li>
+  <li><b>Overtime:</b> an extra 30% of the hourly rate for that day.</li>
+  <li><b>Worked, and it is also your rest day:</b> 200% plus another 30% of that, or 260%.</li>
+</ul>
+<h2>Special non-working days</h2>
+<p>Special non-working days are declared each year by presidential proclamation. They commonly include days such as Ninoy Aquino Day (21 August), All Saints' Day (1 November), the Feast of the Immaculate Conception (8 December), Christmas Eve (24 December) and the last day of the year (31 December), and sometimes others. Always check the proclamation for the year.</p>
+<ul>
+  <li><b>Did not work:</b> no pay, unless your company policy, contract or collective agreement grants it.</li>
+  <li><b>Worked (first 8 hours):</b> 130% of your daily rate.</li>
+  <li><b>Worked, and it is also your rest day:</b> 150% of your daily rate.</li>
+  <li><b>Overtime:</b> an extra 30% of the hourly rate for that day.</li>
+</ul>
+<h2>Special working days</h2>
+<p>On a special <i>working</i> day, normal rules apply: you are paid your regular rate for work done.</p>
+<h2>Examples with a ₱600 daily rate</h2>
+<ul>
+  <li>Regular holiday, not worked: <b>₱600</b></li>
+  <li>Regular holiday, worked: <b>₱1,200</b></li>
+  <li>Regular holiday on your rest day, worked: <b>₱1,560</b></li>
+  <li>Special non-working day, worked: <b>₱780</b></li>
+  <li>Special non-working day on your rest day, worked: <b>₱900</b></li>
+</ul>
+<h2>Who is not covered</h2>
+<p>Holiday pay rules don't apply to everyone — for example, government employees, managerial employees and some small retail and service businesses are treated differently. Check with DOLE if you are unsure.</p>
+<p>Want to know what overtime on these days is worth? See our guide to <a href="overtime-night-differential.html">overtime and night differential pay</a>.</p>
+<p class="note">General information based on the Labor Code and DOLE advisories. DOLE issues a pay-rules advisory for each holiday; check it for special cases.</p>`,
+  },
+  {
+    slug: 'overtime-night-differential',
+    title: 'How to Compute Overtime and Night Differential Pay in the Philippines',
+    description: 'Step-by-step computation of overtime pay, rest day pay and night shift differential under the Philippine Labor Code, with worked examples.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> overtime on a regular workday is paid at <b>125%</b> of your hourly rate. Work between <b>10 pm and 6 am</b> earns a night shift differential of at least <b>10%</b> of your hourly rate for each hour. Working on your rest day pays <b>130%</b> of your daily rate.</p>
+<h2>Step 1: Find your hourly rate</h2>
+<p>Normal working hours are 8 hours a day, so your hourly rate is your daily rate divided by 8. A ₱800 daily rate gives an hourly rate of <b>₱100</b>.</p>
+<h2>Overtime on an ordinary working day</h2>
+<p>Work beyond 8 hours earns your hourly rate plus at least <b>25%</b>.</p>
+<p><b>Example:</b> 2 hours of overtime at ₱100 an hour: 2 × ₱100 × 1.25 = <b>₱250</b>.</p>
+<h2>Working on your rest day or a special day</h2>
+<p>Work on your scheduled rest day or a special non-working day is paid at <b>130%</b> of your daily rate for the first 8 hours. Overtime on those days adds another 30% of the hourly rate for that day.</p>
+<p><b>Example:</b> 8 hours on your rest day at a ₱800 daily rate: ₱800 × 1.3 = <b>₱1,040</b>. Two more hours of overtime: 2 × (₱100 × 1.3) × 1.3 = <b>₱338</b>.</p>
+<h2>Night shift differential</h2>
+<p>For every hour worked between <b>10:00 pm and 6:00 am</b>, you get at least an extra <b>10%</b> of your hourly rate for that time.</p>
+<p><b>Example:</b> a shift from 6 pm to 2 am includes 4 hours of night work. At ₱100 an hour, the night differential is 4 × ₱100 × 0.10 = <b>₱40</b>. Night hours that are also overtime earn both premiums.</p>
+<h2>Things to know</h2>
+<ul>
+  <li><b>Undertime can't cancel overtime.</b> Under the Labor Code, coming in late or leaving early on one day can't be offset by overtime on another day.</li>
+  <li><b>Overtime must be paid even if it wasn't formally approved</b> when the employer knew about the work and allowed it — but company rules on approval still matter, so keep records.</li>
+  <li><b>Not everyone is covered.</b> Managerial employees, officers, field personnel and some others are excluded from overtime and night differential rules.</li>
+  <li>For holidays, see our <a href="holiday-pay-rules.html">holiday pay guide</a>.</li>
+</ul>
+<p class="note">General information based on the Labor Code of the Philippines. Your contract or company policy may give more than the legal minimum; check with DOLE for your situation.</p>`,
+  },
+  {
+    slug: 'budget-50-30-20-philippines',
+    title: 'The 50/30/20 Budget Rule on a Filipino Salary',
+    description: 'How to use the 50/30/20 budget rule with Philippine take-home pay, including family support, with a worked example and simple adjustments.',
+    updated: '2026-10-29',
+    tool: { path: 'take-home-pay-calculator/', label: 'Find your take-home pay first' },
+    body: `
+<p><b>Short answer:</b> split your <b>take-home pay</b> into 50% for needs, 30% for wants and 20% for savings and debt payments. On a ₱26,500 take-home pay, that is about ₱13,250 for needs, ₱7,950 for wants and ₱5,300 for savings.</p>
+<h2>The three buckets</h2>
+<ul>
+  <li><b>Needs (50%):</b> rent or amortisation, food, utilities, transport, school expenses, insurance and minimum loan payments.</li>
+  <li><b>Wants (30%):</b> eating out, shopping, subscriptions, travel, gadgets and hobbies.</li>
+  <li><b>Savings and debt (20%):</b> emergency fund, retirement and investments, and any extra payments on debt.</li>
+</ul>
+<h2>Use take-home pay, not gross salary</h2>
+<p>Base the split on what actually reaches your account after SSS, PhilHealth, Pag-IBIG and tax. A ₱30,000 monthly salary is about ₱26,500 take-home, so the budget starts from ₱26,500.</p>
+<h2>What about supporting family?</h2>
+<p>Many Filipinos send money to parents or siblings every month. Decide where it fits: if it pays for essentials like food, bills or tuition, treat it as a <b>need</b>. Write it down as its own line so it is planned, not a surprise each payday.</p>
+<h2>Adjust the percentages to your life</h2>
+<p>The 50/30/20 split is a starting point. In cities with high rent, needs may take 60% — then trim wants to 20%. Try to keep savings at 20%, or at least start with 10% and raise it with every salary increase.</p>
+<h2>Make it automatic</h2>
+<ol>
+  <li>On payday, move your savings amount to a separate account first.</li>
+  <li>Pay fixed needs right away.</li>
+  <li>What's left is your spending money for wants — no guilt needed.</li>
+</ol>
+<p>Building your emergency fund? Read our <a href="emergency-fund-guide.html">emergency fund guide</a>.</p>
+<p class="note">General information, not financial advice.</p>`,
+  },
+  {
+    slug: 'pag-ibig-mp2-guide',
+    title: 'Pag-IBIG MP2 Savings: How It Works and Who It Suits',
+    description: 'A plain guide to the Pag-IBIG MP2 voluntary savings program: who can join, minimum savings, the 5-year term, dividends and payout options.',
+    updated: '2026-10-29',
+    tool: { path: 'compound-interest-calculator/', label: 'See how savings grow over 5 years' },
+    body: `
+<p><b>Short answer:</b> MP2 (Modified Pag-IBIG II) is a voluntary 5-year savings program run by the Pag-IBIG Fund. You can save from <b>₱500</b> per payment, dividends are <b>tax-free</b>, and the savings are <b>guaranteed by the national government</b>. It suits money you won't need for five years.</p>
+<h2>Who can join</h2>
+<p>Active Pag-IBIG members can open an MP2 account, including employees, self-employed members and OFWs. Some former members and pensioners can join too. You can open more than one MP2 account.</p>
+<h2>How it works</h2>
+<ul>
+  <li><b>Term:</b> each MP2 account matures after <b>5 years</b>.</li>
+  <li><b>Savings:</b> minimum of ₱500 per payment, with no fixed schedule — you can save monthly, occasionally or in one lump sum.</li>
+  <li><b>Dividends:</b> declared each year based on the Fund's earnings. In recent years they have been around 6–7% a year, higher than most regular savings accounts. Past rates don't guarantee future ones.</li>
+  <li><b>Payout options:</b> receive dividends <b>every year</b>, or let them <b>compound</b> and receive everything at maturity. Compounding gives a bigger total.</li>
+</ul>
+<h2>Can I withdraw early?</h2>
+<p>Early withdrawal is allowed only for specific reasons set by Pag-IBIG (such as serious illness, disability, unemployment or leaving the country for good), and in some cases the dividends paid are reduced. Treat MP2 as money you can leave alone for the full five years — keep your emergency fund somewhere you can reach it quickly.</p>
+<h2>How to open an account</h2>
+<p>You can enrol online through Virtual Pag-IBIG or at a Pag-IBIG branch, then pay through accredited banks, payment centres or e-wallets. Keep your MP2 account number and receipts.</p>
+<h2>Is MP2 right for you?</h2>
+<ul>
+  <li><b>Good for:</b> medium-term goals five years away, like a house down payment or a child's tuition, and savers who want low risk.</li>
+  <li><b>Less suitable for:</b> money you may need soon, or savers comfortable with higher risk for potentially higher returns.</li>
+</ul>
+<p class="note">Rules and dividend rates are set by the Pag-IBIG Fund; check pagibigfund.gov.ph for the latest details before you save.</p>`,
+  },
+  {
+    slug: 'ofw-remittance-tips',
+    title: 'Sending Money Home: How OFWs Can Get More Pesos Per Remittance',
+    description: 'How to compare remittance services, avoid hidden exchange rate costs and scams, and get more pesos to your family in the Philippines.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> compare the <b>total pesos your family receives</b>, not just the fee. The exchange rate a service gives you often costs more than its fee. Use services supervised by the Bangko Sentral ng Pilipinas (BSP) or regulated in the country you work in.</p>
+<h2>The two costs of every remittance</h2>
+<ol>
+  <li><b>The fee</b> — a fixed amount or a percentage.</li>
+  <li><b>The exchange rate margin</b> — the difference between the market rate and the rate the service gives you. This is often hidden.</li>
+</ol>
+<h2>A worked example</h2>
+<p>You send US$500 when the market rate is about ₱64 per dollar:</p>
+<ul>
+  <li><b>Service A:</b> fee US$5, rate ₱63.20 → (500 − 5) × 63.20 = <b>₱31,284</b></li>
+  <li><b>Service B:</b> fee US$10, rate ₱64.00 → (500 − 10) × 64.00 = <b>₱31,360</b></li>
+</ul>
+<p>Service B charges a higher fee but delivers more pesos. Always compare the final amount received. You can check the day's reference rates in our <a href="./#markets">Markets</a> section.</p>
+<h2>Ways to get more pesos</h2>
+<ul>
+  <li><b>Send larger amounts less often</b> when fees are fixed per transfer.</li>
+  <li><b>Send to a bank account or e-wallet</b> — it is usually cheaper than cash pickup.</li>
+  <li><b>Compare two or three services</b> before each big transfer; rates change daily.</li>
+  <li><b>Don't try to time the market.</b> Waiting for a "better rate" can backfire when your family needs the money now.</li>
+</ul>
+<h2>Stay safe</h2>
+<ul>
+  <li>Use banks, licensed remittance companies and e-money issuers. In the Philippines, they are supervised by the BSP.</li>
+  <li>Never send money to someone you've only met online, or for a "job fee", "package release" or "prize".</li>
+  <li>Double-check the recipient's account details; transfers to the wrong account are hard to reverse.</li>
+  <li>Keep receipts and reference numbers until your family confirms they received the money.</li>
+</ul>
+<p>Planning what your family does with it? Our <a href="budget-50-30-20-philippines.html">50/30/20 budget guide</a> and <a href="emergency-fund-guide.html">emergency fund guide</a> can help.</p>
+<p class="note">Examples are for illustration; fees and rates vary by service, country and day.</p>`,
+  },
+  {
+    slug: 'peso-exchange-rates-explained',
+    title: 'Peso Exchange Rates Explained: Why Your Bank Rate Differs',
+    description: 'What the peso exchange rate means, why banks and money changers give different rates, and how to get a fair rate when you exchange or pay abroad.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> the rate you see in the news is a <b>reference rate</b>. Banks and money changers <b>buy</b> foreign currency from you at a lower rate and <b>sell</b> it to you at a higher one. The gap between them, the spread, is how they make money.</p>
+<h2>Reading a rate</h2>
+<p>"₱64 per US dollar" means one US dollar is worth 64 pesos. When the number goes up, the peso is <b>weaker</b> (you need more pesos per dollar); when it goes down, the peso is <b>stronger</b>.</p>
+<ul>
+  <li>A weaker peso helps OFW families and exporters, because each dollar sent home buys more pesos.</li>
+  <li>A stronger peso helps importers and Filipinos travelling abroad, because foreign goods and trips cost fewer pesos.</li>
+</ul>
+<h2>Buying rate vs selling rate</h2>
+<p>A money changer might post <b>buying ₱63.50 / selling ₱64.50</b> for the US dollar:</p>
+<ul>
+  <li>If you <b>sell</b> them US$100, you get ₱6,350 (their buying rate).</li>
+  <li>If you <b>buy</b> US$100 from them, you pay ₱6,450 (their selling rate).</li>
+</ul>
+<p>The smaller the spread, the better the deal for you.</p>
+<h2>Where to exchange</h2>
+<ul>
+  <li><b>Banks and licensed money changers</b> registered with the BSP. Compare a couple of nearby options.</li>
+  <li>Avoid unlicensed street changers — short-changing and fake bills are common risks.</li>
+  <li>Airport counters are convenient but often have wider spreads. Exchange only what you need there.</li>
+</ul>
+<h2>Paying with cards abroad</h2>
+<p>When a foreign shop or ATM offers to charge you <b>in pesos</b> instead of the local currency, it usually uses a worse rate. Choosing to pay in the <b>local currency</b> generally works out cheaper. Check your card's foreign transaction fee too.</p>
+<h2>Where our rates come from</h2>
+<p>The peso rates in our <a href="./#markets">Markets</a> section are daily reference rates, useful for comparing offers. The rate you actually get from a bank or remittance service will be slightly different.</p>
+<p class="note">General information; rates change throughout the day.</p>`,
+  },
+  {
+    slug: 'psei-stock-investing-basics',
+    title: "What Is the PSEi? A Beginner's Guide to the Philippine Stock Market",
+    description: 'What the PSEi measures, how to start investing in Philippine stocks with a small amount, and the basic risks every beginner should know.',
+    updated: '2026-10-29',
+    tool: { path: 'compound-interest-calculator/', label: 'See how regular investing can grow' },
+    body: `
+<p><b>Short answer:</b> the <b>PSEi</b> (Philippine Stock Exchange index) tracks the share prices of <b>30 of the largest and most actively traded companies</b> on the Philippine Stock Exchange. When people say "the market went up today", they usually mean the PSEi rose. You can follow it in our <a href="./#markets">Markets</a> section.</p>
+<h2>What the PSEi tells you</h2>
+<p>The PSEi is a quick summary of how big Philippine companies are doing on the stock market — banks, property developers, conglomerates, telcos, utilities and food companies. Its companies are reviewed regularly, so the list changes over time.</p>
+<h2>How to start investing</h2>
+<ol>
+  <li><b>Build your emergency fund first</b>, so you never have to sell stocks at a bad time to pay a bill.</li>
+  <li><b>Open an account with a stockbroker</b> that is a trading participant of the PSE and registered with the SEC. Many online brokers let you start with a small amount.</li>
+  <li><b>Learn about board lots</b> — the minimum number of shares per order, which depends on the share price.</li>
+  <li><b>Understand the costs:</b> brokers charge commissions, and there are exchange fees and taxes when you buy and sell. Small, frequent trades lose more to fees.</li>
+</ol>
+<h2>Simple approaches for beginners</h2>
+<ul>
+  <li><b>Peso cost averaging:</b> invest a fixed amount on a regular schedule, whether prices are up or down.</li>
+  <li><b>Diversify:</b> spread your money across several companies and industries, or use index funds that track the PSEi.</li>
+  <li><b>Think long term:</b> share prices can fall sharply in the short run. Money you need within a few years usually belongs in safer places.</li>
+</ul>
+<h2>Dividends</h2>
+<p>Some companies share profits with shareholders as dividends. For individual Philippine residents, cash dividends from Philippine companies are subject to a final tax, which is withheld before you receive them.</p>
+<h2>Know the risks</h2>
+<p>Stocks can lose value, and there is no guarantee of returns. Be wary of anyone promising fixed high returns or "sure win" stock tips — the SEC regularly warns against investment scams.</p>
+<p class="note">General information, not investment advice. Check with a licensed professional before investing.</p>`,
+  },
+  {
+    slug: 'typhoon-signals-preparedness',
+    title: 'PAGASA Typhoon Signals Explained, Plus a Go-Bag Checklist',
+    description: 'What PAGASA Tropical Cyclone Wind Signals 1 to 5 and rainfall warnings mean, what to do at each level, and what to pack in an emergency go-bag.',
+    updated: '2026-10-29',
+    body: `
+<p><b>Short answer:</b> PAGASA raises <b>Tropical Cyclone Wind Signals (TCWS) 1 to 5</b> for areas expecting strong winds from a storm. The higher the number, the stronger the expected winds and the less time before they arrive. Signal 1 means prepare; Signal 3 and above means stay indoors and be ready to evacuate if told to.</p>
+<h2>Wind signals</h2>
+<ul>
+  <li><b>Signal 1:</b> strong winds of 39–61 km/h expected within 36 hours. Minimal to minor damage. Secure loose items and monitor updates.</li>
+  <li><b>Signal 2:</b> gale-force winds of 62–88 km/h expected within 24 hours. Minor to moderate damage. Prepare your go-bag; stay away from the sea.</li>
+  <li><b>Signal 3:</b> storm-force winds of 89–117 km/h expected within 18 hours. Moderate to significant damage. Stay indoors; follow evacuation orders.</li>
+  <li><b>Signal 4:</b> typhoon-force winds of 118–184 km/h expected within 12 hours. Significant to severe damage.</li>
+  <li><b>Signal 5:</b> winds of 185 km/h or more expected within 12 hours. Severe to catastrophic damage.</li>
+</ul>
+<p>Signals can be raised with less warning if a storm strengthens quickly, so keep checking official updates.</p>
+<h2>Rainfall warnings</h2>
+<p>Heavy rain is often more dangerous than wind. PAGASA's colour-coded rainfall warnings show expected rainfall intensity:</p>
+<ul>
+  <li><b>Yellow:</b> heavy rain; flooding possible in low-lying areas. Monitor the weather.</li>
+  <li><b>Orange:</b> intense rain; flooding is threatening. Be alert and ready to move.</li>
+  <li><b>Red:</b> torrential rain; serious flooding expected. Evacuate when told to.</li>
+</ul>
+<h2>What to pack in a go-bag</h2>
+<ul>
+  <li>Drinking water and ready-to-eat food for at least 3 days</li>
+  <li>Flashlight, extra batteries and a fully charged power bank</li>
+  <li>Battery-powered or wind-up radio</li>
+  <li>First aid kit and a week's supply of maintenance medicines</li>
+  <li>Copies of IDs and important documents in a waterproof pouch</li>
+  <li>Some cash in small bills — ATMs and e-wallets may be down</li>
+  <li>Change of clothes, raincoat, blanket and hygiene items</li>
+  <li>Whistle, face masks, and supplies for babies, the elderly or pets</li>
+</ul>
+<h2>Before the storm</h2>
+<ul>
+  <li>Know your barangay's evacuation centre and the safest route there.</li>
+  <li>Agree on a meeting place with your family in case you get separated.</li>
+  <li>Charge phones, fill water containers and secure or bring in loose items outside.</li>
+  <li>Follow announcements from PAGASA, NDRRMC and your local government. Call <b>911</b> in an emergency.</li>
+</ul>
+<p class="note">Signal definitions follow PAGASA's tropical cyclone wind signal system. Always follow official advisories and evacuation orders.</p>`,
+  },
 ];
+
+const GUIDES_ORDER = [
+  'christmas-budget-guide', '13th-month-pay-guide', 'holiday-pay-rules', 'payroll-deductions-guide',
+  'overtime-night-differential', 'budget-50-30-20-philippines', 'emergency-fund-guide', 'pag-ibig-mp2-guide',
+  'add-on-vs-diminishing-interest', 'ofw-remittance-tips', 'peso-exchange-rates-explained',
+  'psei-stock-investing-basics', 'typhoon-signals-preparedness', 'how-to-spot-fake-news',
+];
+
+const rank = (g) => (GUIDES_ORDER.includes(g.slug) ? GUIDES_ORDER.indexOf(g.slug) : GUIDES_ORDER.length);
+export const GUIDES = [...ALL_GUIDES].sort((a, b) => rank(a) - rank(b));

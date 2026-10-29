@@ -13,7 +13,8 @@ const TOOLS_URL = (env('TOOLS_URL') || 'https://tools.phtrendwatch.world').repla
 // Search engine ownership checks. The IndexNow key is public by design: it is served at /<key>.txt.
 const GOOGLE_VERIFY = env('GOOGLE_SITE_VERIFICATION');
 const BING_VERIFY = env('BING_SITE_VERIFICATION');
-const INDEXNOW_KEY = /^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
+const GA_ID = /^G-[A-Z0-9]{4,20}$/.test(env('GA_MEASUREMENT_ID')) ? env('GA_MEASUREMENT_ID') : '';
+const INDEXNOW_KEY =/^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
 const AD_EVERY = Math.max(2, Number(env('AD_EVERY')) || 6);
 const PER_SECTION = 10;
 
@@ -348,7 +349,9 @@ function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
   const adAccount = (AD_CLIENT ? `<meta name="google-adsense-account" content="${esc(AD_CLIENT)}">` : '')
     + (GOOGLE_VERIFY ? `<meta name="google-site-verification" content="${esc(GOOGLE_VERIFY)}">` : '')
     + (BING_VERIFY ? `<meta name="msvalidate.01" content="${esc(BING_VERIFY)}">` : '');
-  const ld = schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '';
+  const analytics = GA_ID ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${esc(GA_ID)}"></script>`
+    + `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${esc(GA_ID)}');</script>` : '';
+  const ld = schema ?`<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '';
 
   return `<!doctype html>
 <html lang="en">
@@ -366,6 +369,7 @@ ${canonical}
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 ${adAccount}
 ${ld}
+${analytics}
 ${adScript}
 <style>${STYLE}</style>
 <script>${THEME_INIT}</script>
@@ -471,7 +475,8 @@ function sideMenu(file) {
 }
 
 function promoBlocks() {
-  const guides = GUIDES.map((g) => `<li><a href="${g.slug}.html">${esc(g.title)}</a></li>`).join('');
+  const guides = GUIDES.slice(0, 6).map((g) => `<li><a href="${g.slug}.html">${esc(g.title)}</a></li>`).join('')
+    + '<li><a href="guides.html">All guides →</a></li>';
   const tools = TOOL_LINKS.map(([path, label]) => `<li><a href="${TOOLS_URL}/${path}">${esc(label)}</a></li>`).join('');
   return `<div class="promo"><h2>Guides from ${esc(SITE_NAME)}</h2><ul>${guides}</ul></div>
 <div class="promo"><h2>Free tools</h2><ul>${tools}</ul></div>`;
@@ -581,6 +586,8 @@ function infoPages(builtAt) {
   <li>You can opt out of personalised advertising in <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>. You can also opt out of some third-party vendors' use of cookies for personalised advertising at <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info</a>.</li>
 </ul>
 <p>To learn more, read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses information from sites that use its services</a>. You can also block or delete cookies in your browser settings.</p>
+${GA_ID ? `<h2>Analytics</h2>
+<p>We use Google Analytics to understand how visitors use the site, such as which pages are read most. It uses cookies to collect information like pages visited, time on site, device and approximate location (country or city). This information is aggregated and does not identify you personally. You can opt out with the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics opt-out browser add-on</a>.</p>` : ''}
 <h2>Links to other websites</h2>
 <p>Headlines link to other publishers' websites. Their own privacy policies apply when you visit them.</p>
 <h2>Children</h2>
