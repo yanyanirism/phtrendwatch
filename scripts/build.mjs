@@ -300,7 +300,23 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .prose a{color:var(--accent-2)}
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:24px 16px 80px}
 footer nav{justify-content:center;padding:8px 0 0}
-@media (max-width:900px){.layout{grid-template-columns:1fr}aside{display:none}}
+.with-side{display:grid;grid-template-columns:210px minmax(0,1fr);gap:28px;align-items:start}
+.side{position:sticky;top:110px;max-height:calc(100vh - 120px);overflow-y:auto;padding-bottom:16px}
+.side-list h2{margin:16px 0 4px;padding:0 10px;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border:0}
+.side-list h2:first-child{margin-top:4px}
+.side .side-list{display:block;max-width:none;margin:0;padding:0;overflow:visible;font-weight:400}
+.side-list a{display:block;padding:5px 10px;border-radius:8px;text-decoration:none;font-size:.9rem;color:var(--text);white-space:normal}
+.side-list a:hover{background:var(--chip);color:var(--accent-2)}
+.side-list a[aria-current=page]{background:var(--chip);color:var(--accent);font-weight:700}
+.side-list .all{color:var(--accent-2);font-weight:600}
+.side-toggle{display:none}
+@media (max-width:900px){.layout{grid-template-columns:1fr}aside{display:none}
+.with-side{grid-template-columns:minmax(0,1fr);gap:0}
+.side{position:static;max-height:none;overflow:visible;padding:0 0 4px}
+.side-toggle{display:flex;justify-content:space-between;width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.side .side-list{display:none;margin-top:8px;padding:4px 8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.side.open .side-list{display:block}
+.side.open .side-toggle span{display:inline-block;transform:rotate(180deg)}}
 @media (max-width:560px){.cards{grid-template-columns:1fr}.card.lead a{font-size:1.15rem}.prose{padding:4px 16px 16px}}
 `;
 
@@ -318,7 +334,9 @@ const FAVICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><re
 const THEME_INIT = "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}";
 const THEME_TOGGLE = "document.getElementById('theme-toggle').addEventListener('click',function(){"
   + "var root=document.documentElement,dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;"
-  + "root.dataset.theme=dark?'light':'dark';try{localStorage.setItem('theme',root.dataset.theme)}catch(e){}});";
+  + "root.dataset.theme=dark?'light':'dark';try{localStorage.setItem('theme',root.dataset.theme)}catch(e){}});"
+  + "document.getElementById('side-toggle').addEventListener('click',function(){"
+  + "var open=this.parentNode.classList.toggle('open');this.setAttribute('aria-expanded',open)});";
 const SITE_LINKS =`<a href="guides.html">Guides</a><a href="${TOOLS_URL}/">Free tools</a>`;
 
 function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
@@ -358,8 +376,11 @@ ${adScript}
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch light or dark theme"><span class="moon" aria-hidden="true">☾</span><span class="sun" aria-hidden="true">☀</span></button></div>
   <nav>${nav.links}</nav>
 </header>
-<div class="wrap">
+<div class="wrap with-side">
+${sideMenu(file)}
+<div class="content">
 ${body}
+</div>
 </div>
 <footer>
   <div>Headlines link to their original publishers via Google News. Guides are written by the ${esc(SITE_NAME)} team.</div>
@@ -421,6 +442,33 @@ const TOOL_LINKS = [
   ['percentage-calculator/', 'Percentage calculator'],
   ['date-difference-calculator/', 'Days between dates'],
 ];
+
+// Every calculator on the tools site, grouped as in its own side menu.
+const ALL_TOOLS = [
+  ['Pay & taxes', [['take-home-pay-calculator/', 'Take-home pay'], ['13th-month-pay-calculator/', '13th month pay']]],
+  ['Money', [['loan-calculator/', 'Loan'], ['compound-interest-calculator/', 'Compound interest'],
+    ['savings-goal-calculator/', 'Savings goal'], ['discount-calculator/', 'Discount'], ['tip-calculator/', 'Tip'],
+    ['percentage-calculator/', 'Percentage']]],
+  ['Dates, health & units', [['age-calculator/', 'Age'], ['date-difference-calculator/', 'Days between dates'],
+    ['bmi-calculator/', 'BMI'], ['unit-converter/', 'Unit converter']]],
+];
+
+/** Left menu on every page: news sections, markets and scores, every calculator, and guides. */
+function sideMenu(file) {
+  const home = file === 'index.html' ? '' : './'; // section anchors live on the home page
+  const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
+  const news = SECTIONS.map((s) => link(`${home}#${s.id}`, s.title)).join('');
+  const data = link(`${home}#markets`, 'Markets: peso & stocks') + link(`${home}#scores`, 'Scores: NBA & football');
+  const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
+    + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
+    + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
+  const guides = link('guides.html', 'All guides', file === 'guides.html')
+    + GUIDES.slice(0, 3).map((g) => link(`${g.slug}.html`, g.title.split(':')[0], file === `${g.slug}.html`)).join('');
+  return `<div class="side"><button type="button" class="side-toggle" id="side-toggle" aria-expanded="false" aria-controls="side-list">`
+    + `Menu: news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
+    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Markets &amp; scores</h2>${data}`
+    + `${tools}<h2>Guides</h2>${guides}</nav></div>`;
+}
 
 function promoBlocks() {
   const guides = GUIDES.map((g) => `<li><a href="${g.slug}.html">${esc(g.title)}</a></li>`).join('');
