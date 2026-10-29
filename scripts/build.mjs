@@ -1,6 +1,6 @@
 // Builds the static site into dist/ from live RSS feeds. Run on a schedule (see .github/workflows/deploy.yml).
 import { mkdir, writeFile } from 'node:fs/promises';
-import { GUIDES } from './guides.mjs';
+import { GUIDES, GUIDE_TOPICS } from './guides.mjs';
 
 try { process.loadEnvFile(); } catch { /* no .env file: rely on the real environment */ }
 
@@ -84,6 +84,52 @@ const WEATHER_GROUPS = [
   ] },
 ];
 const CITIES = WEATHER_GROUPS.flatMap((g) => g.cities.map((c) => [...c, g.title]));
+// Gaming news: Google News searches per game. Titles must mention the game, because some names are common words
+// ("CrossFire" also means boxing events and graphics cards); a group with nothing relevant is left off the page.
+const newsSearch = (query, days) => `https://news.google.com/rss/search?q=${encodeURIComponent(`${query} when:${days}d`)}&${PH}`;
+// `priority` games (the ones played most at the shop) come first and get their own side-menu links; the rest follow.
+// `links` are official pages (checked to exist) for updates and rules. A game with no recent news and no links is
+// left off the page.
+const GAMING = [
+  { title: 'Roblox', priority: true, query: 'Roblox', days: 14, must: [/roblox/i],
+    links: [['Official newsroom', 'https://about.roblox.com/newsroom'],
+      ['Parental controls', 'https://about.roblox.com/parental-controls']] },
+  { title: 'CrossFire', priority: true, query: '"CrossFire" (Smilegate OR "CrossFire: Legends" OR esports OR codes OR update)', days: 60,
+    must: [/cross\s?fire/i, /smilegate|legends|codes|update|patch|tournament|esports|season|league|\bcf\b/i],
+    not: /steel crossfire|killed|shot|shooting|gunman|gunfire|police|soldier|military|war\b|attack/i },
+  { title: 'Rules of Survival', priority: true, query: '"Rules of Survival" (NetEase OR game OR "battle royale")', days: 60,
+    must: [/rules of survival/i, /netease|\bgame\b|battle royale|update|season|mobile/i] },
+  { title: 'Valorant', priority: true, query: 'Valorant', days: 14, must: [/valorant|\bvct\b/i],
+    links: [['Patch notes', 'https://playvalorant.com/en-us/news/tags/patch-notes/'],
+      ['Official news', 'https://playvalorant.com/en-us/news/']] },
+  { title: 'Dota 2', priority: true, query: '"Dota 2"', days: 14, must: [/dota\s?2/i],
+    links: [['Patch notes', 'https://www.dota2.com/patches'], ['Official news', 'https://www.dota2.com/news']] },
+  { title: 'Mobile Legends', query: '"Mobile Legends" OR MLBB OR "MPL Philippines"', days: 14,
+    must: [/mobile legends|mlbb|\bmpl\b/i], links: [['Official news', 'https://www.mobilelegends.com/news']] },
+  { title: 'Minecraft', query: 'Minecraft', days: 14, must: [/minecraft/i],
+    links: [['Official articles', 'https://www.minecraft.net/en-us/articles']] },
+  { title: 'Call of Duty: Mobile', query: '"Call of Duty: Mobile" OR CODM', days: 14,
+    must: [/call of duty:? mobile|\bcodm\b/i] },
+  { title: 'Genshin Impact', query: '"Genshin Impact"', days: 14, must: [/genshin/i],
+    links: [['Official news', 'https://genshin.hoyoverse.com/en/news']] },
+  { title: 'Free Fire', query: '"Free Fire" Garena', days: 14, must: [/free fire/i],
+    links: [['Official news', 'https://ff.garena.com/en/news/']] },
+];
+// Tech Trends: same approach as the games, one Google News search per topic.
+const TECH_TOPICS = [
+  { title: 'AI', query: '"artificial intelligence" OR OpenAI OR Anthropic OR "Google Gemini" OR "AI model"', days: 7,
+    must: [/\bAI\b|artificial intelligence|openai|anthropic|gemini|chatgpt|claude|\bllm/i] },
+  { title: 'Automation & robotics', query: 'automation OR robotics OR robots', days: 7, must: [/automat|robot/i] },
+  { title: 'Software development', query: '"software development" OR developers OR programming OR GitHub OR "open source"',
+    days: 7, must: [/develop|programm|github|open.source|coding|software/i],
+    not: /condo|housing|real estate|property|residential|subdivision|township/i },
+  { title: 'Philippine tech', query: 'Philippines technology OR DICT OR "tech startup" Philippines', days: 7,
+    must: [/philippine|\bph\b|\bdict\b|manila|pinoy|filipino/i] },
+];
+const gameId = (title) => `game-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+const PER_GAME = 5;
+// Young players read the Game Zone, so headlines about betting or sexual abuse are left out of it entirely.
+const GAMING_EXCLUDE = /\bbet(s|ting)?\b|gambl|casino|\bodds\b|sportsbook|sexual|abuse|predator|grooming|porn|nsfw/i;
 const espn = (path) => `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
 const LEAGUES = [
   { title: 'NBA', url: espn('basketball/nba') },
@@ -203,6 +249,15 @@ async function loadPseStocks() {
     .filter((s) => typeof s?.price === 'number');
 }
 
+async function loadNewsGroup(game) {
+  const articles = (await loadSection({ url: newsSearch(game.query, game.days) }))
+    .filter((a) => game.must.every((re) => re.test(a.title)) && !game.not?.test(a.title) && !GAMING_EXCLUDE.test(a.title))
+    .sort((a, b) => b.date - a.date);
+  const seenTitles = new Set();
+  return { title: game.title, priority: Boolean(game.priority), links: game.links ?? [],
+    articles: articles.filter((a) => !seenTitles.has(a.title) && seenTitles.add(a.title)).slice(0, PER_GAME) };
+}
+
 const settledValues = async (promises) => (await Promise.allSettled(promises))
   .filter((r) => r.status === 'fulfilled').map((r) => r.value);
 
@@ -314,6 +369,34 @@ ${groups}
 <p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Days follow each city's local calendar.</p>${clocks}</section>`;
 }
 
+/** A card of headlines for one news group (a game or a tech topic), with optional official links. */
+function newsCard(g) {
+  const news = g.articles.length ? `<ul class="headlines">${g.articles.map((a) => `<li>
+<a href="${esc(a.link)}" target="_blank" rel="noopener nofollow">${esc(a.title)}</a>
+<span class="meta"><span>${esc(a.source)}</span>${timeTag(a.date)}</span></li>`).join('')}</ul>` : '<p class="source">No new headlines this week.</p>';
+  const official = g.links.length ? `<p class="official">Official: ${g.links.map(([label, url]) =>
+    `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`).join(' · ')}</p>` : '';
+  return `<div id="${gameId(g.title)}"><h3>${esc(g.title)}</h3>${news}${official}</div>`;
+}
+
+function gamingBlock(games) {
+  const shown = games.filter((g) => g.articles.length || g.links.length);
+  if (!shown.length) return '';
+  const card = newsCard;
+  const top = shown.filter((g) => g.priority).map(card).join('');
+  const more = shown.filter((g) => !g.priority).map(card).join('');
+  return `<section id="gaming"><h2>Game Zone</h2><p class="intro">The latest news, updates and patch notes for Roblox, CrossFire, Rules of Survival, Valorant, Dota 2 and more. Play safe: read our guides to <a href="gaming-scams-free-robux.html">"free Robux" and other scams</a> and <a href="protect-gaming-accounts.html">protecting your gaming accounts</a>.</p>
+${top ? `<div class="data-grid">${top}</div>` : ''}
+${more ? `<h3 class="wx-group">More games</h3><div class="data-grid">${more}</div>` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
+}
+
+function techBlock(topics) {
+  const shown = topics.filter((t) => t.articles.length);
+  if (!shown.length) return '';
+  return `<section id="tech-trends"><h2>Tech Trends</h2><p class="intro">What's new in AI, automation, software development and Philippine tech. New to AI tools? Start with our guides to <a href="ai-chatbots-for-school-and-work.html">using AI chatbots</a> and <a href="ai-prompt-writing-tips.html">writing better prompts</a>.</p>
+<div class="data-grid">${shown.map(newsCard).join('')}</div><p class="source">Headlines link to their original publishers via Google News.</p></section>`;
+}
+
 function scoresBlock(leagues) {
   const withGames = leagues.filter((l) => l.games.length);
   if (!withGames.length) return '';
@@ -394,6 +477,16 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .wx-days{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:.88rem}
 .wx-days li{display:grid;grid-template-columns:3em 1.8em 1fr;align-items:center}
 .wx-days li span:last-child{text-align:right}
+.guide-list{list-style:none;padding:0;margin:0 0 8px}
+.guide-list li{padding:10px 0;border-bottom:1px solid var(--line)}
+.guide-list li a{font-weight:700}
+.guide-list li span{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.headlines{list-style:none;margin:0;padding:0}
+.headlines li{padding:8px 0;border-bottom:1px solid var(--line)}
+.headlines li:last-child{border-bottom:0}
+.headlines a{text-decoration:none;font-weight:600;font-size:.92rem}
+.headlines a:hover{color:var(--accent-2);text-decoration:underline}
+.headlines .meta{margin-top:4px}
 .games{list-style:none;margin:0;padding:0;font-size:.9rem}
 .games li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .when{color:var(--muted);font-size:.8rem;white-space:nowrap}
@@ -503,19 +596,22 @@ ${body}
 `;
 }
 
-function home({ sections, trends, builtAt, markets, scores, weather }) {
+function home({ sections, trends, builtAt, markets, scores, weather, gaming, tech }) {
   const marketsHtml = marketsBlock(markets);
   const scoresHtml = scoresBlock(scores);
   const weatherHtml = weatherBlock(weather);
-  // Weather follows Philippines, markets follow Business and scores follow Sports; if a section is missing they go
-  // at the end.
-  const after = { philippines: weatherHtml, business: marketsHtml, sports: scoresHtml };
+  const gamingHtml = gamingBlock(gaming);
+  const techHtml = techBlock(tech);
+  // The Game Zone leads the page. Weather follows Philippines, markets follow Business, tech trends follow
+  // Technology and scores follow Sports; if a section is missing they go at the end.
+  const after = { philippines: weatherHtml, business: marketsHtml, tech: techHtml, sports: scoresHtml };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
-  const mainHtml = sections.map(({ sec, articles }, i) => section(sec, articles) + (after[sec.id] ?? '')
+  const mainHtml = gamingHtml + sections.map(({ sec, articles }, i) => section(sec, articles) + (after[sec.id] ?? '')
     + (i === 1 ? promoBlocks() : '')).join('\n') + extras;
   const dataLinks = (weatherHtml ? '<a href="#weather">Weather</a>' : '')
-    + (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
+    + (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (techHtml ? '<a href="#tech-trends">Tech Trends</a>' : '')
+    + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
   const sidebar = ad('sidebar') + ad('sidebar');
@@ -539,7 +635,8 @@ for (const t of document.querySelectorAll('time')) {
     title: `${SITE_NAME} — Philippines & World News`,
     nav: {
       updated: `<span class="updated">Updated ${esc(manila)} (Manila time)</span>`,
-      links: sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>`).join('') + dataLinks + SITE_LINKS,
+      links: (gamingHtml ? '<a href="#gaming">Game Zone</a>' : '')
+        + sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>`).join('') + dataLinks + SITE_LINKS,
     },
     body,
     schema: { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, description: DESCRIPTION,
@@ -572,15 +669,20 @@ function sideMenu(file) {
   const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
   const news = SECTIONS.map((s) => link(`${home}#${s.id}`, s.title)).join('');
   const data = link(`${home}#weather`, 'Weather forecast') + link(`${home}#markets`, 'Markets: peso & stocks')
+    + link(`${home}#tech-trends`, 'Tech Trends: AI & automation')
     + link(`${home}#scores`, 'Scores: NBA & football');
+  const games = GAMING.filter((g) => g.priority).map((g) => link(`${home}#${gameId(g.title)}`, g.title)).join('')
+    + link(`${home}#gaming`, 'More games')
+    + link('gaming-scams-free-robux.html', 'Avoid gaming scams', file === 'gaming-scams-free-robux.html');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
     + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
     + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
   const guides = link('guides.html', 'All guides', file === 'guides.html')
     + GUIDES.slice(0, 3).map((g) => link(`${g.slug}.html`, g.title.split(':')[0], file === `${g.slug}.html`)).join('');
   return `<div class="side"><button type="button" class="side-toggle" id="side-toggle" aria-expanded="false" aria-controls="side-list">`
-    + `Menu: news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
-    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Weather, markets &amp; scores</h2>${data}`
+    + `Menu: games, news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
+    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>Game Zone</h2>${games}<h2>News</h2>${news}`
+    + `<h2>Weather, markets, tech &amp; scores</h2>${data}`
     + `${tools}<h2>Guides</h2>${guides}</nav></div>`;
 }
 
@@ -620,8 +722,17 @@ ${cta}
         ...(SITE_URL && { mainEntityOfPage: `${SITE_URL}/${g.slug}.html` }) },
     });
   }
-  const list = GUIDES.map((g) => `<h2><a href="${g.slug}.html">${esc(g.title)}</a></h2><p>${esc(g.description)}</p>`).join('\n');
-  pages['guides.html'] = infoPage('guides.html', 'Guides', `<p>Practical, plain-English guides on money, work and staying informed in the Philippines.</p>
+  const bySlug = new Map(GUIDES.map((g) => [g.slug, g]));
+  const grouped = new Set(GUIDE_TOPICS.flatMap(([, slugs]) => slugs));
+  const topics = [...GUIDE_TOPICS, ['More guides', GUIDES.filter((g) => !grouped.has(g.slug)).map((g) => g.slug)]];
+  const list = topics.map(([topic, slugs]) => {
+    const items = slugs.map((s) => bySlug.get(s)).filter(Boolean);
+    if (!items.length) return '';
+    const id = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return `<h2 id="${id}">${esc(topic)}</h2><ul class="guide-list">${items.map((g) =>
+      `<li><a href="${g.slug}.html">${esc(g.title)}</a><span>${esc(g.description)}</span></li>`).join('')}</ul>`;
+  }).join('\n');
+  pages['guides.html'] = infoPage('guides.html', 'Guides', `<p>Practical, plain-English guides on money, work, gaming, online safety and technology in the Philippines.</p>
 ${list}
 <h2>Free calculators</h2>
 <p>Work out the numbers with our <a href="${TOOLS_URL}/">free online calculators</a> — loans, savings, 13th month pay and more.</p>`,
@@ -644,7 +755,7 @@ function infoPages(builtAt) {
 </ul>
 <h2>How it works</h2>
 <p>The page refreshes about every 30 minutes. Headlines come from Google News and trending searches from Google Trends. Every headline links straight to the publisher's own website, where you can read the full story. ${name} does not copy or rewrite other publishers' articles.</p>
-<p>The Weather, Markets and Scores sections show city forecasts, peso exchange rates, Philippine and world stock prices, and NBA and football games, from the sources named under each one.</p>
+<p>The Weather, Markets, Scores and Gaming sections show city forecasts, peso exchange rates, Philippine and world stock prices, NBA and football games, and gaming and esports headlines, from the sources named under each one.</p>
 <h2>Our own guides and tools</h2>
 <p>Alongside the headlines, we publish <a href="guides.html">practical guides</a> on money and work in the Philippines — such as how to compute your 13th month pay and how to compare loan interest rates — and a set of <a href="${TOOLS_URL}/">free calculators</a> that run right in your browser.</p>
 <p>${name} is independent and is not affiliated with any of the publishers it links to.</p>
@@ -729,19 +840,21 @@ if (!sections.length) {
 }
 
 const skip = (what) => (err) => (console.warn(`Skipping ${what}: ${err.message}`), null);
-const [trends, forex, stocks, indices, scores, weather] = await Promise.all([
+const [trends, forex, stocks, indices, scores, weather, gaming, tech] = await Promise.all([
   loadTrends().catch((err) => (console.warn(`Skipping trends: ${err.message}`), [])),
   loadForex().catch(skip('forex')),
   loadPseStocks().catch((err) => (console.warn(`Skipping PSE stocks: ${err.message}`), [])),
   settledValues(WORLD_INDICES.map(loadQuote)),
   settledValues(LEAGUES.map(loadScores)),
   settledValues(CITIES.map(loadWeather)),
+  settledValues(GAMING.map(loadNewsGroup)),
+  settledValues(TECH_TOPICS.map(loadNewsGroup)),
 ]);
 const builtAt = new Date();
 const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
-await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather }));
+await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather, gaming, tech }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
 if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
@@ -757,4 +870,6 @@ if (SITE_URL) {
 console.log(`Built dist/: ${sections.reduce((n, s) => n + s.articles.length, 0)} headlines, ${trends.length} trends, `
   + `${forex ? forex.rows.length : 0} rates, ${stocks.length + indices.length} quotes, `
   + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${weather.length} weather cities, `
+  + `${gaming.reduce((n, g) => n + g.articles.length, 0)} gaming headlines, `
+  + `${tech.reduce((n, g) => n + g.articles.length, 0)} tech trend headlines, `
   + `${PAGES.length} info pages, ${GUIDES.length} guides.`);
