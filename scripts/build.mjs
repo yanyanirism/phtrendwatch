@@ -67,6 +67,16 @@ const WORLD_INDICES = [
   ['PSEI.PS', 'PSEi'],
   ['^GSPC', 'S&P 500'], ['^DJI', 'Dow Jones'], ['^IXIC', 'Nasdaq'], ['^N225', 'Nikkei 225'], ['^HSI', 'Hang Seng'],
 ];
+// Weather: MET Norway's free forecast API (CC BY 4.0, commercial use allowed with credit). It requires a
+// User-Agent that identifies the site, and at most 4 decimals in coordinates.
+const WEATHER_UA = 'PHTrendWatch/1.0 https://phtrendwatch.world';
+const weatherUrl = ([lat, lon]) => `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
+const CITIES = [
+  ['Manila', [14.5995, 120.9842]], ['Quezon City', [14.676, 121.0437]], ['Baguio', [16.4023, 120.596]],
+  ['Legazpi', [13.1391, 123.7438]], ['Iloilo City', [10.7202, 122.5621]], ['Cebu City', [10.3157, 123.8854]],
+  ['Tacloban', [11.2444, 125.0039]], ['Puerto Princesa', [9.7392, 118.7353]], ['Cagayan de Oro', [8.4542, 124.6319]],
+  ['Davao City', [7.1907, 125.4553]],
+];
 const espn = (path) => `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
 const LEAGUES = [
   { title: 'NBA', url: espn('basketball/nba') },
@@ -141,6 +151,37 @@ async function loadQuote([symbol, name]) {
   if (typeof price !== 'number') throw new Error(`no price for ${symbol}`);
   return { name, price, change: typeof prev === 'number' && prev ? (price - prev) / prev * 100 : null,
     time: new Date(meta.regularMarketTime * 1000) };
+}
+
+const MANILA_OFFSET_MS = 8 * 3600 * 1000; // the Philippines has no daylight saving time
+const manilaDay = (iso) => new Date(Date.parse(iso) + MANILA_OFFSET_MS).toISOString().slice(0, 10);
+
+async function loadWeather([name, coords]) {
+  const res = await fetch(weatherUrl(coords), { headers: { 'user-agent': WEATHER_UA }, signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const series = (await res.json()).properties?.timeseries ?? [];
+  if (!series.length) throw new Error(`no forecast for ${name}`);
+  const now = series[0];
+  const days = new Map();
+  for (const point of series) {
+    const day = manilaDay(point.time);
+    const temp = point.data.instant.details.air_temperature;
+    const entry = days.get(day) ?? { day, min: temp, max: temp, symbol: null };
+    entry.min = Math.min(entry.min, temp);
+    entry.max = Math.max(entry.max, temp);
+    // Use the forecast for the 6 hours from about midday (04:00 UTC = noon in Manila) to describe the day.
+    const sixHour = point.data.next_6_hours?.summary?.symbol_code;
+    if (sixHour && (!entry.symbol || point.time.slice(11, 13) === '04')) entry.symbol = sixHour;
+    days.set(day, entry);
+  }
+  return {
+    name,
+    temp: now.data.instant.details.air_temperature,
+    humidity: now.data.instant.details.relative_humidity,
+    symbol: now.data.next_1_hours?.summary?.symbol_code ?? now.data.next_6_hours?.summary?.symbol_code,
+    rain6h: now.data.next_6_hours?.details?.precipitation_amount ?? null,
+    days: [...days.values()].slice(0, 4),
+  };
 }
 
 async function loadPseStocks() {
@@ -221,6 +262,37 @@ function marketsBlock({ forex, stocks, indices }) {
 ${sources ? `<p class="source">Delayed prices for information only, not investment advice (${sources}).</p>` : ''}</div></div></section>`;
 }
 
+const WEATHER_ICONS = [
+  ['thunder', '⛈️', 'Thunderstorms'], ['heavyrain', '🌧️', 'Heavy rain'], ['rainshowers', '🌦️', 'Rain showers'],
+  ['lightrain', '🌦️', 'Light rain'], ['rain', '🌧️', 'Rain'], ['fog', '🌫️', 'Fog'], ['clearsky', '☀️', 'Clear'],
+  ['fair', '🌤️', 'Fair'], ['partlycloudy', '⛅', 'Partly cloudy'], ['cloudy', '☁️', 'Cloudy'],
+];
+function weatherIcon(symbol) {
+  const base = (symbol ?? '').replace(/_(day|night|polartwilight)$/, '');
+  const [, icon, label] = WEATHER_ICONS.find(([key]) => base.includes(key)) ?? ['', '🌡️', 'Forecast'];
+  return { icon, label };
+}
+
+function weatherBlock(cities) {
+  if (!cities.length) return '';
+  const weekday = (day) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'UTC' });
+  const cards = cities.map((c) => {
+    const now = weatherIcon(c.symbol);
+    const today = c.days[0];
+    const outlook = c.days.slice(1, 4).map((d) => {
+      const w = weatherIcon(d.symbol);
+      return `<li><span>${esc(weekday(d.day))}</span><span title="${esc(w.label)}">${w.icon}</span><span>${Math.round(d.max)}° / ${Math.round(d.min)}°</span></li>`;
+    }).join('');
+    return `<div class="wx"><div class="wx-now"><span class="wx-icon" aria-hidden="true">${now.icon}</span><div><h3>${esc(c.name)}</h3>
+<p><b>${Math.round(c.temp)}°C</b> ${esc(now.label)}</p></div></div>
+<p class="wx-meta">Rest of today ${Math.round(today.max)}° / ${Math.round(today.min)}° · Humidity ${Math.round(c.humidity)}%${c.rain6h != null ? ` · Rain next 6h: ${num(c.rain6h, 1)} mm` : ''}</p>
+<ul class="wx-days">${outlook}</ul></div>`;
+  }).join('');
+  return `<section id="weather"><h2>Weather</h2><p class="intro">Current conditions and the 3-day outlook for major cities across Luzon, Visayas and Mindanao. For typhoon signals and warnings, always follow <a href="https://www.pagasa.dost.gov.ph" target="_blank" rel="noopener">PAGASA</a> — see our <a href="typhoon-signals-preparedness.html">typhoon signals guide</a>.</p>
+<div class="wx-grid">${cards}</div>
+<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Times and days are in Manila time.</p></section>`;
+}
+
 function scoresBlock(leagues) {
   const withGames = leagues.filter((l) => l.games.length);
   if (!withGames.length) return '';
@@ -288,6 +360,17 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .data-grid th:first-child,.data-grid td:first-child{text-align:left}
 .data-grid small{color:var(--muted)}
 .up{color:#178a3e}.down{color:var(--accent)}
+.wx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.wx{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wx-now{display:flex;gap:10px;align-items:center}
+.wx-icon{font-size:2rem;line-height:1}
+.wx h3{margin:0;font-size:1rem}
+.wx-now p{margin:2px 0 0}
+.wx-now b{font-size:1.25rem}
+.wx-meta{margin:8px 0;color:var(--muted);font-size:.8rem}
+.wx-days{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:.88rem}
+.wx-days li{display:grid;grid-template-columns:3em 1.8em 1fr;align-items:center}
+.wx-days li span:last-child{text-align:right}
 .games{list-style:none;margin:0;padding:0;font-size:.9rem}
 .games li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .when{color:var(--muted);font-size:.8rem;white-space:nowrap}
@@ -397,16 +480,19 @@ ${body}
 `;
 }
 
-function home({ sections, trends, builtAt, markets, scores }) {
+function home({ sections, trends, builtAt, markets, scores, weather }) {
   const marketsHtml = marketsBlock(markets);
   const scoresHtml = scoresBlock(scores);
-  // Markets follow Business and scores follow Sports; if a section is missing they go at the end.
-  const after = { business: marketsHtml, sports: scoresHtml };
+  const weatherHtml = weatherBlock(weather);
+  // Weather follows Philippines, markets follow Business and scores follow Sports; if a section is missing they go
+  // at the end.
+  const after = { philippines: weatherHtml, business: marketsHtml, sports: scoresHtml };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
   const mainHtml = sections.map(({ sec, articles }, i) => section(sec, articles) + (after[sec.id] ?? '')
     + (i === 1 ? promoBlocks() : '')).join('\n') + extras;
-  const dataLinks = (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
+  const dataLinks = (weatherHtml ? '<a href="#weather">Weather</a>' : '')
+    + (marketsHtml ? '<a href="#markets">Markets</a>' : '') + (scoresHtml ? '<a href="#scores">Scores</a>' : '');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
   const sidebar = ad('sidebar') + ad('sidebar');
@@ -462,7 +548,8 @@ function sideMenu(file) {
   const home = file === 'index.html' ? '' : './'; // section anchors live on the home page
   const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
   const news = SECTIONS.map((s) => link(`${home}#${s.id}`, s.title)).join('');
-  const data = link(`${home}#markets`, 'Markets: peso & stocks') + link(`${home}#scores`, 'Scores: NBA & football');
+  const data = link(`${home}#weather`, 'Weather forecast') + link(`${home}#markets`, 'Markets: peso & stocks')
+    + link(`${home}#scores`, 'Scores: NBA & football');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
     + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
     + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
@@ -470,7 +557,7 @@ function sideMenu(file) {
     + GUIDES.slice(0, 3).map((g) => link(`${g.slug}.html`, g.title.split(':')[0], file === `${g.slug}.html`)).join('');
   return `<div class="side"><button type="button" class="side-toggle" id="side-toggle" aria-expanded="false" aria-controls="side-list">`
     + `Menu: news, tools &amp; guides <span aria-hidden="true">▾</span></button>`
-    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Markets &amp; scores</h2>${data}`
+    + `<nav class="side-list" id="side-list" aria-label="Site menu"><h2>News</h2>${news}<h2>Weather, markets &amp; scores</h2>${data}`
     + `${tools}<h2>Guides</h2>${guides}</nav></div>`;
 }
 
@@ -534,7 +621,7 @@ function infoPages(builtAt) {
 </ul>
 <h2>How it works</h2>
 <p>The page refreshes about every 30 minutes. Headlines come from Google News and trending searches from Google Trends. Every headline links straight to the publisher's own website, where you can read the full story. ${name} does not copy or rewrite other publishers' articles.</p>
-<p>The Markets and Scores sections show peso exchange rates, Philippine and world stock prices, and NBA and football games, from the sources named under each table.</p>
+<p>The Weather, Markets and Scores sections show city forecasts, peso exchange rates, Philippine and world stock prices, and NBA and football games, from the sources named under each one.</p>
 <h2>Our own guides and tools</h2>
 <p>Alongside the headlines, we publish <a href="guides.html">practical guides</a> on money and work in the Philippines — such as how to compute your 13th month pay and how to compare loan interest rates — and a set of <a href="${TOOLS_URL}/">free calculators</a> that run right in your browser.</p>
 <p>${name} is independent and is not affiliated with any of the publishers it links to.</p>
@@ -619,18 +706,19 @@ if (!sections.length) {
 }
 
 const skip = (what) => (err) => (console.warn(`Skipping ${what}: ${err.message}`), null);
-const [trends, forex, stocks, indices, scores] = await Promise.all([
+const [trends, forex, stocks, indices, scores, weather] = await Promise.all([
   loadTrends().catch((err) => (console.warn(`Skipping trends: ${err.message}`), [])),
   loadForex().catch(skip('forex')),
   loadPseStocks().catch((err) => (console.warn(`Skipping PSE stocks: ${err.message}`), [])),
   settledValues(WORLD_INDICES.map(loadQuote)),
   settledValues(LEAGUES.map(loadScores)),
+  settledValues(CITIES.map(loadWeather)),
 ]);
 const builtAt = new Date();
 const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
-await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores }));
+await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
 if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
@@ -645,4 +733,5 @@ if (SITE_URL) {
 
 console.log(`Built dist/: ${sections.reduce((n, s) => n + s.articles.length, 0)} headlines, ${trends.length} trends, `
   + `${forex ? forex.rows.length : 0} rates, ${stocks.length + indices.length} quotes, `
-  + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${PAGES.length} info pages, ${GUIDES.length} guides.`);
+  + `${scores.reduce((n, l) => n + l.games.length, 0)} games, ${weather.length} weather cities, `
+  + `${PAGES.length} info pages, ${GUIDES.length} guides.`);
