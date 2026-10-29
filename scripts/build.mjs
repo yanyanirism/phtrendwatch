@@ -1,5 +1,6 @@
 // Builds the static site into dist/ from live RSS feeds. Run on a schedule (see .github/workflows/deploy.yml).
 import { mkdir, writeFile } from 'node:fs/promises';
+import { CHANNELS } from './channels.mjs';
 import { GUIDES, GUIDE_TOPICS } from './guides.mjs';
 
 try { process.loadEnvFile(); } catch { /* no .env file: rely on the real environment */ }
@@ -581,7 +582,8 @@ footer nav{justify-content:center;padding:8px 0 0}
 
 const DESCRIPTION = 'The latest trending news in the Philippines and around the world, updated every 30 minutes.';
 const PAGES = [
-  { file: 'about.html', label: 'About' },
+  { file: 'about.html', label: 'About Us' },
+  { file: 'affiliates.html', label: 'Our affiliates & other content' },
   { file: 'editorial-policy.html', label: 'Editorial Policy' },
   { file: 'contact.html', label: 'Contact' },
   { file: 'privacy.html', label: 'Privacy Policy' },
@@ -604,7 +606,7 @@ function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
     ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(AD_CLIENT)}" crossorigin="anonymous"></script>`
     : '';
   const canonical = SITE_URL ? `<link rel="canonical" href="${esc(`${SITE_URL}/${file === 'index.html' ? '' : file}`)}">` : '';
-  const pageLinks = SITE_LINKS + PAGES.map((p) => `<a href="${p.file}">${p.label}</a>`).join('');
+  const pageLinks = SITE_LINKS + PAGES.map((p) => `<a href="${p.file}">${esc(p.label)}</a>`).join('');
   const adAccount = (AD_CLIENT ? `<meta name="google-adsense-account" content="${esc(AD_CLIENT)}">` : '')
     + (GOOGLE_VERIFY ? `<meta name="google-site-verification" content="${esc(GOOGLE_VERIFY)}">` : '')
     + (BING_VERIFY ? `<meta name="msvalidate.01" content="${esc(BING_VERIFY)}">` : '');
@@ -816,9 +818,19 @@ function infoPages(builtAt) {
   const name = esc(SITE_NAME);
   const updated = builtAt.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'long' });
   const email = CONTACT_EMAIL ? `<a href="mailto:${esc(CONTACT_EMAIL)}">${esc(CONTACT_EMAIL)}</a>` : 'our email address (coming soon)';
+  const channelLinks = (c) => c.links.map(([platform, url]) =>
+    `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(platform)}</a>`).join(' · ');
+  const channelList = `<ul class="guide-list">${CHANNELS.map((c) => `<li><b>${esc(c.name)}</b>`
+    + `${c.about ? `<span>${esc(c.about)}</span>` : ''}<span>${channelLinks(c)}</span></li>`).join('')}</ul>`;
 
   return {
-    'about.html': infoPage('about.html', 'About', `
+    'affiliates.html': infoPage('affiliates.html', 'Our Affiliates & Other Content', `
+<p>${name} is part of a small family of channels and pages. Follow us for learning videos, quotes, stories and more.</p>
+${channelList}
+<p>Want to work with us? See our <a href="contact.html">Contact</a> page.</p>`,
+    { description: `Channels and pages from the team behind ${SITE_NAME}: The Pebble Minds, Echoes and Obsidian, Yanyanirism and more.` }),
+
+    'about.html': infoPage('about.html', 'About Us', `
 <p>${name} brings together the stories people in the Philippines are reading and searching for right now, in one fast page.</p>
 <h2>What you'll find here</h2>
 <ul>
@@ -831,6 +843,9 @@ function infoPages(builtAt) {
 <h2>Our own guides and tools</h2>
 <p>Alongside the headlines, we publish <a href="guides.html">practical guides</a> on money and work in the Philippines — such as how to compute your 13th month pay and how to compare loan interest rates — and a set of <a href="${TOOLS_URL}/">free calculators</a> that run right in your browser.</p>
 <p>${name} is independent and is not affiliated with any of the publishers it links to.</p>
+<h2>Our other content</h2>
+<p>The team behind ${name} also creates content on these channels — see <a href="affiliates.html">our affiliates and other content</a>.</p>
+${channelList}
 <h2>Get in touch</h2>
 <p>Questions, corrections or suggestions? See the <a href="contact.html">Contact</a> page.</p>`),
 
