@@ -1,0 +1,9 @@
+{
+  "name": "trending-ph",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.12" },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}
