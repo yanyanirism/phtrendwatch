@@ -79,6 +79,7 @@ const WEATHER_GROUPS = [
   ] },
   { title: 'Around the world', cities: [
     ['Sydney, Australia', [-33.8688, 151.2093], 'Australia/Sydney'], ['New York, USA', [40.7128, -74.006], 'America/New_York'],
+    ['Barstow, California, USA', [34.8958, -117.0173], 'America/Los_Angeles'],
     ['Toronto, Canada', [43.6532, -79.3832], 'America/Toronto'], ['London, UK', [51.5074, -0.1278], 'Europe/London'],
     ['Berlin, Germany', [52.52, 13.405], 'Europe/Berlin'],
   ] },
