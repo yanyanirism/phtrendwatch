@@ -71,12 +71,19 @@ const WORLD_INDICES = [
 // User-Agent that identifies the site, and at most 4 decimals in coordinates.
 const WEATHER_UA = 'PHTrendWatch/1.0 https://phtrendwatch.world';
 const weatherUrl = ([lat, lon]) => `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
-const CITIES = [
-  ['Manila', [14.5995, 120.9842]], ['Quezon City', [14.676, 121.0437]], ['Baguio', [16.4023, 120.596]],
-  ['Legazpi', [13.1391, 123.7438]], ['Iloilo City', [10.7202, 122.5621]], ['Cebu City', [10.3157, 123.8854]],
-  ['Tacloban', [11.2444, 125.0039]], ['Puerto Princesa', [9.7392, 118.7353]], ['Cagayan de Oro', [8.4542, 124.6319]],
-  ['Davao City', [7.1907, 125.4553]],
+const MANILA_TZ = 'Asia/Manila';
+const WEATHER_GROUPS = [
+  { title: 'Philippines', cities: [
+    ['Manila', [14.5995, 120.9842], MANILA_TZ], ['Pampanga (San Fernando)', [15.0286, 120.6898], MANILA_TZ],
+    ['Visayas (Cebu City)', [10.3157, 123.8854], MANILA_TZ], ['Davao City', [7.1907, 125.4553], MANILA_TZ],
+  ] },
+  { title: 'Around the world', cities: [
+    ['Sydney, Australia', [-33.8688, 151.2093], 'Australia/Sydney'], ['New York, USA', [40.7128, -74.006], 'America/New_York'],
+    ['Toronto, Canada', [43.6532, -79.3832], 'America/Toronto'], ['London, UK', [51.5074, -0.1278], 'Europe/London'],
+    ['Berlin, Germany', [52.52, 13.405], 'Europe/Berlin'],
+  ] },
 ];
+const CITIES = WEATHER_GROUPS.flatMap((g) => g.cities.map((c) => [...c, g.title]));
 const espn = (path) => `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
 const LEAGUES = [
   { title: 'NBA', url: espn('basketball/nba') },
@@ -153,10 +160,11 @@ async function loadQuote([symbol, name]) {
     time: new Date(meta.regularMarketTime * 1000) };
 }
 
-const MANILA_OFFSET_MS = 8 * 3600 * 1000; // the Philippines has no daylight saving time
-const manilaDay = (iso) => new Date(Date.parse(iso) + MANILA_OFFSET_MS).toISOString().slice(0, 10);
+// A forecast time as the city's own calendar day (YYYY-MM-DD) and hour, so each city's outlook follows its local days.
+const localDay = (iso, tz) => new Date(iso).toLocaleDateString('en-CA', { timeZone: tz });
+const localHour = (iso, tz) => Number(new Date(iso).toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false })) % 24;
 
-async function loadWeather([name, coords]) {
+async function loadWeather([name, coords, tz, group]) {
   const res = await fetch(weatherUrl(coords), { headers: { 'user-agent': WEATHER_UA }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   const series = (await res.json()).properties?.timeseries ?? [];
@@ -164,18 +172,21 @@ async function loadWeather([name, coords]) {
   const now = series[0];
   const days = new Map();
   for (const point of series) {
-    const day = manilaDay(point.time);
+    const day = localDay(point.time, tz);
     const temp = point.data.instant.details.air_temperature;
     const entry = days.get(day) ?? { day, min: temp, max: temp, symbol: null };
     entry.min = Math.min(entry.min, temp);
     entry.max = Math.max(entry.max, temp);
-    // Use the forecast for the 6 hours from about midday (04:00 UTC = noon in Manila) to describe the day.
+    // Describe the day by the 6-hour forecast starting around local midday (later points are 6-hourly).
     const sixHour = point.data.next_6_hours?.summary?.symbol_code;
-    if (sixHour && (!entry.symbol || point.time.slice(11, 13) === '04')) entry.symbol = sixHour;
+    const hour = localHour(point.time, tz);
+    if (sixHour && (!entry.symbol || (hour >= 10 && hour <= 13))) entry.symbol = sixHour;
     days.set(day, entry);
   }
   return {
     name,
+    tz,
+    group,
     temp: now.data.instant.details.air_temperature,
     humidity: now.data.instant.details.relative_humidity,
     symbol: now.data.next_1_hours?.summary?.symbol_code ?? now.data.next_6_hours?.summary?.symbol_code,
@@ -273,10 +284,12 @@ function weatherIcon(symbol) {
   return { icon, label };
 }
 
+const clockText = (date, tz) => date.toLocaleString('en-PH', { timeZone: tz, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+
 function weatherBlock(cities) {
   if (!cities.length) return '';
   const weekday = (day) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-PH', { weekday: 'short', timeZone: 'UTC' });
-  const cards = cities.map((c) => {
+  const card = (c) => {
     const now = weatherIcon(c.symbol);
     const today = c.days[0];
     const outlook = c.days.slice(1, 4).map((d) => {
@@ -285,12 +298,20 @@ function weatherBlock(cities) {
     }).join('');
     return `<div class="wx"><div class="wx-now"><span class="wx-icon" aria-hidden="true">${now.icon}</span><div><h3>${esc(c.name)}</h3>
 <p><b>${Math.round(c.temp)}°C</b> ${esc(now.label)}</p></div></div>
+<p class="wx-time">Local time: <span class="clock" data-tz="${esc(c.tz)}">${esc(clockText(new Date(), c.tz))}</span></p>
 <p class="wx-meta">Rest of today ${Math.round(today.max)}° / ${Math.round(today.min)}° · Humidity ${Math.round(c.humidity)}%${c.rain6h != null ? ` · Rain next 6h: ${num(c.rain6h, 1)} mm` : ''}</p>
 <ul class="wx-days">${outlook}</ul></div>`;
-  }).join('');
-  return `<section id="weather"><h2>Weather</h2><p class="intro">Current conditions and the 3-day outlook for major cities across Luzon, Visayas and Mindanao. For typhoon signals and warnings, always follow <a href="https://www.pagasa.dost.gov.ph" target="_blank" rel="noopener">PAGASA</a> — see our <a href="typhoon-signals-preparedness.html">typhoon signals guide</a>.</p>
-<div class="wx-grid">${cards}</div>
-<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Times and days are in Manila time.</p></section>`;
+  };
+  const groups = WEATHER_GROUPS.map((g) => [g.title, cities.filter((c) => c.group === g.title)])
+    .filter(([, list]) => list.length)
+    .map(([title, list]) => `<h3 class="wx-group">${esc(title)}</h3><div class="wx-grid">${list.map(card).join('')}</div>`).join('');
+  // Clocks are filled in by the visitor's browser so they stay current between the 30-minute rebuilds.
+  const clocks = `<script>(function(){function tick(){document.querySelectorAll('.clock').forEach(function(t){`
+    + `t.textContent=new Date().toLocaleString('en-PH',{timeZone:t.dataset.tz,weekday:'short',hour:'numeric',minute:'2-digit'})})}`
+    + `tick();setInterval(tick,30000)})();</script>`;
+  return `<section id="weather"><h2>Weather &amp; world time</h2><p class="intro">Current conditions, local time and the 3-day outlook in the Philippines and the countries where many Filipinos live and work. For typhoon signals and warnings, always follow <a href="https://www.pagasa.dost.gov.ph" target="_blank" rel="noopener">PAGASA</a> — see our <a href="typhoon-signals-preparedness.html">typhoon signals guide</a>.</p>
+${groups}
+<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Days follow each city's local calendar.</p>${clocks}</section>`;
 }
 
 function scoresBlock(leagues) {
@@ -367,7 +388,9 @@ section h2{font-size:1.15rem;margin:24px 0 12px;padding-left:10px;border-left:4p
 .wx h3{margin:0;font-size:1rem}
 .wx-now p{margin:2px 0 0}
 .wx-now b{font-size:1.25rem}
-.wx-meta{margin:8px 0;color:var(--muted);font-size:.8rem}
+.wx-meta{margin:4px 0 8px;color:var(--muted);font-size:.8rem}
+.wx-time{margin:8px 0 0;font-size:.85rem;font-weight:600}
+.wx-group{margin:16px 0 8px;font-size:.95rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .wx-days{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:.88rem}
 .wx-days li{display:grid;grid-template-columns:3em 1.8em 1fr;align-items:center}
 .wx-days li span:last-child{text-align:right}
