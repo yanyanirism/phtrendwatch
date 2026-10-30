@@ -1,6 +1,6 @@
 # Trending PH
 
-One static page of trending Philippine and world headlines, with ad slots. It rebuilds itself every 30 minutes on GitHub Actions and is published to GitHub Pages. There is no server and nothing to install.
+One static page of trending Philippine and world headlines, with ad slots. It rebuilds itself several times a day on GitHub Actions and is published to GitHub Pages. The schedule asks for every 30 minutes, but GitHub often runs scheduled jobs hours late. There is no server and nothing to install.
 
 - **News:** Google News RSS (Top Stories, Philippines, World, Business, Technology, Entertainment, Sports), with duplicates removed. Each headline links to its publisher.
 - **Trending bar:** Google Trends daily searches for the Philippines.
