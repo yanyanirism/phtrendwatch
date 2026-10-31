@@ -54,7 +54,7 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # Pushes change guides and pages; the 30-minute headline refreshes don't need search engines re-notified.
+  # Pushes change guides and pages; the scheduled headline refreshes don't need search engines re-notified.
   notify-search-engines:
     needs: deploy
     if: github.event_name == 'push'

@@ -386,13 +386,13 @@ function weatherBlock(cities) {
   const groups = WEATHER_GROUPS.map((g) => [g.title, cities.filter((c) => c.group === g.title)])
     .filter(([, list]) => list.length)
     .map(([title, list]) => `<h3 class="wx-group">${esc(title)}</h3><div class="wx-grid">${list.map(card).join('')}</div>`).join('');
-  // Clocks are filled in by the visitor's browser so they stay current between the 30-minute rebuilds.
+  // Clocks are filled in by the visitor's browser so they stay current between rebuilds.
   const clocks = `<script>(function(){function tick(){document.querySelectorAll('.clock').forEach(function(t){`
     + `t.textContent=new Date().toLocaleString('en-PH',{timeZone:t.dataset.tz,weekday:'short',hour:'numeric',minute:'2-digit'})})}`
     + `tick();setInterval(tick,30000)})();</script>`;
   return `<section id="weather"><h2>Weather &amp; world time</h2><p class="intro">Current conditions, local time and the 3-day outlook in the Philippines and the countries where many Filipinos live and work. For typhoon signals and warnings, always follow <a href="https://www.pagasa.dost.gov.ph" target="_blank" rel="noopener">PAGASA</a> — see our <a href="typhoon-signals-preparedness.html">typhoon signals guide</a>.</p>
 ${groups}
-<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated about every 30 minutes. Days follow each city's local calendar.</p>${clocks}</section>`;
+<p class="source">Forecast data from <a href="https://www.met.no/en" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0), updated several times a day. Days follow each city's local calendar.</p>${clocks}</section>`;
 }
 
 /** A card of headlines for one news group (a game or a tech topic), with optional official links. */
@@ -453,7 +453,7 @@ function scoresBlock(leagues) {
     : `<b>${esc(g.awayScore ?? '')}–${esc(g.homeScore ?? '')}</b> <span class="when">${esc(g.detail)}</span>`);
   const lists = withGames.map((l) => `<div><h3>${esc(l.title)}</h3><ul class="games">${
     l.games.map((g) => `<li><span>${esc(g.away)} <small>at</small> ${esc(g.home)}</span>${score(g)}</li>`).join('')}</ul></div>`).join('');
-  return `<section id="scores"><h2>Scores &amp; schedule</h2><p class="intro">Latest NBA and football results and upcoming games. Upcoming times are in Manila time; scores refresh about every 30 minutes.</p>
+  return `<section id="scores"><h2>Scores &amp; schedule</h2><p class="intro">Latest NBA and football results and upcoming games. Upcoming times are in Manila time; scores refresh several times a day.</p>
 <div class="data-grid">${lists}</div><p class="source">Scores and schedules from ESPN.</p></section>`;
 }
 
@@ -583,7 +583,7 @@ footer nav{justify-content:center;padding:8px 0 0}
 @media (max-width:560px){.cards{grid-template-columns:1fr}.card.lead a{font-size:1.15rem}.prose{padding:4px 16px 16px}}
 `;
 
-const DESCRIPTION = 'The latest trending news in the Philippines and around the world, updated every 30 minutes.';
+const DESCRIPTION = 'The latest trending news in the Philippines and around the world, updated several times a day.';
 const PAGES = [
   { file: 'about.html', label: 'About Us' },
   { file: 'affiliates.html', label: 'Our affiliates & other content' },
@@ -850,7 +850,7 @@ ${services}`,
   <li><b>Trending searches</b> in the Philippines, so you can see what everyone is talking about today.</li>
 </ul>
 <h2>How it works</h2>
-<p>The page refreshes about every 30 minutes. Headlines come from Google News and trending searches from Google Trends. Every headline links straight to the publisher's own website, where you can read the full story. ${name} does not copy or rewrite other publishers' articles.</p>
+<p>The page refreshes several times a day. Headlines come from Google News and trending searches from Google Trends. Every headline links straight to the publisher's own website, where you can read the full story. ${name} does not copy or rewrite other publishers' articles.</p>
 <p>The Weather, Markets, Scores and Gaming sections show city forecasts, peso exchange rates, Philippine and world stock prices, NBA and football games, and gaming and esports headlines, from the sources named under each one.</p>
 <h2>Our own guides and tools</h2>
 <p>Alongside the headlines, we publish <a href="guides.html">practical guides</a> on money and work in the Philippines — such as how to compute your 13th month pay and how to compare loan interest rates — and a set of <a href="${TOOLS_URL}/">free calculators</a> that run right in your browser.</p>
@@ -866,7 +866,7 @@ ${services}
 <p>This page explains how ${name} chooses what appears on the site and how we handle corrections.</p>
 <h2>Headlines</h2>
 <ul>
-  <li>Headlines are selected automatically from Google News for the Philippines, grouped by topic, with duplicates removed. The page refreshes about every 30 minutes.</li>
+  <li>Headlines are selected automatically from Google News for the Philippines, grouped by topic, with duplicates removed. The page refreshes several times a day.</li>
   <li>We show each headline as published, with the publisher's name, and link to the original article. We do not edit headlines to change their meaning, and we do not host or rewrite other publishers' articles.</li>
   <li>Trending searches come from Google Trends for the Philippines and show what people are searching for, not what we endorse.</li>
 </ul>
