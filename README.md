@@ -1,6 +1,6 @@
 # Trending PH
 
-One static page of trending Philippine and world headlines, with ad slots. It rebuilds itself several times a day on GitHub Actions and is published to GitHub Pages. The schedule asks for every 30 minutes, but GitHub often runs scheduled jobs hours late. There is no server and nothing to install.
+A static site of original Philippine guides, weather and world time, and free tools on the home page, plus a News page of trending Philippine and world headlines. It rebuilds itself several times a day on GitHub Actions and is published to GitHub Pages. The schedule asks for every 30 minutes, but GitHub often runs scheduled jobs hours late. There is no server and nothing to install.
 
 - **News:** Google News RSS (Top Stories, Philippines, World, Business, Technology, Entertainment, Sports), with duplicates removed. Each headline links to its publisher.
 - **Trending bar:** Google Trends daily searches for the Philippines.
@@ -8,7 +8,7 @@ One static page of trending Philippine and world headlines, with ad slots. It re
 - **Scores:** NBA, Premier League, Champions League and La Liga results and upcoming games (ESPN).
 - **Guides:** original evergreen articles in `scripts/guides.mjs`, each published as its own page and linked to the calculators at `TOOLS_URL`.
 - **Light/dark theme:** follows the device setting; the button at the top right overrides it and remembers the choice.
-- **Ads:** a top leaderboard, an in-feed ad every `AD_EVERY` headlines plus one after each section, two sticky sidebar ads (desktop only), and a bottom ad. A slot renders only when `ADSENSE_CLIENT` and its slot ID are set, so nothing empty shows during AdSense review.
+- **Ads:** only on pages we write ourselves: the home page (top, between sections, sidebar and bottom slots) and the guide and info pages through Auto ads. The automated headlines page (`news.html`) carries no ad code at all, because AdSense doesn't allow ads on auto-generated content. A slot renders only when `ADSENSE_CLIENT` and its slot ID are set, so nothing empty shows during AdSense review.
 
 Markets, scores and trends are optional: if one of those feeds fails, the page is built without it. Yahoo, ESPN and the Phisix feed are free but unofficial, so they can change without notice.
 
@@ -42,5 +42,5 @@ If every feed fails during a build, the job fails and the last good page stays l
 
 - When `ADSENSE_CLIENT` is set, the build also writes `ads.txt`, which AdSense requires.
 - To get anchor and vignette ads without changing code, turn on **Auto ads** for the site in AdSense.
-- AdSense rejects sites with more ads than content and sites that only aggregate others' content. Approval usually needs a custom domain, a privacy policy, and some original content. Use `AD_EVERY` to adjust ad density.
+- AdSense rejects sites with more ads than content and sites that only aggregate others' content. Approval usually needs a custom domain, a privacy policy, and some original content.
 - GitHub pauses scheduled workflows after 60 days without repository activity. If that happens, re-enable the workflow from the Actions tab.
