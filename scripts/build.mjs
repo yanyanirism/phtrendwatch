@@ -578,6 +578,10 @@ footer nav{justify-content:center;padding:8px 0 0}
 .side.open .side-list{display:block}
 .side.open .side-toggle span{display:inline-block;transform:rotate(180deg)}}
 .hero{margin:20px 0 8px}
+.quick{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 4px}
+.quick a{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.quick a:hover{border-color:var(--accent-2)}
+.quick img{width:28px;height:28px}
 .hero h1{font-size:clamp(1.5rem,4vw,2rem);line-height:1.2;margin:0 0 8px}
 .hero p{margin:0;color:var(--muted);max-width:720px}
 .topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
@@ -691,7 +695,8 @@ function newsPage({ sections, trends, builtAt, markets, scores, gaming, tech, fu
     .filter(([, , html]) => html).map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')).join('');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
-  const body = `  ${chips ? `<div class="trending"><b>Trending in PH</b>${chips}</div>` : ''}
+  const body = `  ${quickLinks()}
+  ${chips ? `<div class="trending"><b>Trending in PH</b>${chips}</div>` : ''}
   <div class="layout single">
     <main>
 ${mainHtml}
@@ -734,7 +739,8 @@ function home({ weather, sections }) {
     + '<a href="news.html#gaming">Game Zone</a><a href="news.html#markets">Markets</a><a href="news.html#fuel">Fuel prices</a>'
     + '<a href="news.html#scores">Scores</a>';
   const sidebar = ad('sidebar') + ad('sidebar');
-  const body = `  <div class="hero"><h1>Guides, tools and news for everyday life in the Philippines</h1>
+  const body = `  ${quickLinks()}
+  <div class="hero"><h1>Guides, tools and news for everyday life in the Philippines</h1>
   <p>${esc(SITE_NAME)} explains the things that affect your pay, your money and your safety online in plain English, from 13th month pay and holiday pay to GCash scams, Roblox safety and AI tools, with free calculators and the day's headlines in one place.</p></div>
   ${ad('top')}
   <div class="layout${sidebar ? '' : ' single'}">
@@ -760,6 +766,33 @@ ${ad('infeed')}
     schema: { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, description: DESCRIPTION,
       ...(SITE_URL && { url: `${SITE_URL}/` }) },
   });
+}
+
+// Icon shortcuts at the top of the home and news pages, so visitors (for example at a computer shop) can jump to the
+// sites they use most. They open in a new tab so this site stays open. Social and everyday sites only: no gambling or
+// betting sites, which AdSense doesn't allow on pages with ads and which aren't for the young visitors we serve.
+const QUICK_LINKS = [
+  ['Facebook', 'https://www.facebook.com/'],
+  ['Messenger', 'https://www.messenger.com/'],
+  ['YouTube', 'https://www.youtube.com/'],
+  ['TikTok', 'https://www.tiktok.com/'],
+  ['Instagram', 'https://www.instagram.com/'],
+  ['X', 'https://x.com/'],
+  ['Discord', 'https://discord.com/app'],
+  ['Reddit', 'https://www.reddit.com/'],
+  ['Gmail', 'https://mail.google.com/', 'gmail.com'],
+  ['Shopee', 'https://shopee.ph/'],
+  ['Lazada', 'https://www.lazada.com.ph/'],
+  ['Roblox', 'https://www.roblox.com/'],
+];
+
+function quickLinks() {
+  // An optional third entry names the domain whose icon to show, when the link's own host has a generic one.
+  return `<nav class="quick" aria-label="Quick links">${QUICK_LINKS.map(([name, url, iconHost]) => {
+    const host = iconHost ?? new URL(url).hostname;
+    return `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(name)}" aria-label="${esc(name)} (opens in a new tab)">`
+      + `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&amp;sz=64" alt="" width="28" height="28"></a>`;
+  }).join('')}</nav>`;
 }
 
 const TOOL_LINKS = [
