@@ -17,7 +17,6 @@ const GOOGLE_VERIFY = env('GOOGLE_SITE_VERIFICATION');
 const BING_VERIFY = env('BING_SITE_VERIFICATION');
 const GA_ID = /^G-[A-Z0-9]{4,20}$/.test(env('GA_MEASUREMENT_ID')) ? env('GA_MEASUREMENT_ID') : '';
 const INDEXNOW_KEY =/^[a-zA-Z0-9-]{8,128}$/.test(env('INDEXNOW_KEY')) ? env('INDEXNOW_KEY') : '';
-const AD_EVERY = Math.max(2, Number(env('AD_EVERY')) || 6);
 const PER_SECTION = 10;
 
 const AD_CLIENT = /^ca-pub-\d{10,20}$/.test(env('ADSENSE_CLIENT')) ? env('ADSENSE_CLIENT') : '';
@@ -327,13 +326,11 @@ function card(article, lead) {
 </div></article>`;
 }
 
+// Headline sections are automated, so they carry no ad slots: AdSense doesn't allow ads on pages of auto-generated
+// content, and ads only go on pages we write ourselves (home, guides, about).
 function section(sec, articles) {
-  const parts = [];
-  articles.forEach((a, i) => {
-    parts.push(card(a, i === 0));
-    if ((i + 1) % AD_EVERY === 0 && i < articles.length - 1) parts.push(ad('infeed'));
-  });
-  return `<section id="${sec.id}"><h2>${esc(sec.title)}</h2><p class="intro">${esc(sec.intro)}</p><div class="cards">${parts.join('\n')}</div></section>\n${ad('infeed')}`;
+  return `<section id="${sec.id}"><h2>${esc(sec.title)}</h2><p class="intro">${esc(sec.intro)}</p><div class="cards">${
+    articles.map((a, i) => card(a, i === 0)).join('\n')}</div></section>`;
 }
 
 const manilaTime = (date, opts) => date.toLocaleString('en-PH', { timeZone: 'Asia/Manila', ...opts });
@@ -421,7 +418,7 @@ function gamingBlock(games) {
   const more = shown.filter((g) => !g.priority).map(gameRow).join('');
   return `<section id="gaming"><h2>Game Zone</h2><p class="intro">The latest news, updates and patch notes for Roblox, CrossFire, Rules of Survival, Valorant, Dota 2 and more. Play safe: read our guides to <a href="gaming-scams-free-robux.html">"free Robux" and other scams</a> and <a href="protect-gaming-accounts.html">protecting your gaming accounts</a>.</p>
 ${top}
-${more ? `${ad('infeed')}<h3 class="wx-group">More games</h3>${more}` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
+${more ? `<h3 class="wx-group">More games</h3>${more}` : ''}<p class="source">Headlines link to their original publishers via Google News; official links go to each game's own website. ${esc(SITE_NAME)} is not affiliated with any game publisher.</p></section>`;
 }
 
 function fuelBlock({ news, crude }) {
@@ -580,10 +577,24 @@ footer nav{justify-content:center;padding:8px 0 0}
 .side .side-list{display:none;margin-top:8px;padding:4px 8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .side.open .side-list{display:block}
 .side.open .side-toggle span{display:inline-block;transform:rotate(180deg)}}
+.hero{margin:20px 0 8px}
+.quick{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0 4px}
+.quick a{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:1px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.quick a:hover{border-color:var(--accent-2)}
+.quick img{width:38px;height:38px}
+@media (max-width:560px){.quick{gap:10px}.quick a{width:54px;height:54px}.quick img{width:32px;height:32px}}
+.hero h1{font-size:clamp(1.5rem,4vw,2rem);line-height:1.2;margin:0 0 8px}
+.hero p{margin:0;color:var(--muted);max-width:720px}
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.topic-grid .promo{margin:0}
+.topic-grid .more{display:inline-block;margin-top:8px;color:var(--accent-2);font-weight:600}
+.news-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.news-links a{padding:6px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--text);background:var(--surface)}
 @media (max-width:560px){.cards{grid-template-columns:1fr}.card.lead a{font-size:1.15rem}.prose{padding:4px 16px 16px}}
 `;
 
-const DESCRIPTION = 'The latest trending news in the Philippines and around the world, updated several times a day.';
+const DESCRIPTION = 'Plain-English guides on money, work, online safety, gaming and AI in the Philippines, with weather, world time and free calculators.';
+const NEWS_DESCRIPTION = 'The latest trending news in the Philippines and around the world, updated several times a day.';
 const PAGES = [
   { file: 'about.html', label: 'About Us' },
   { file: 'affiliates.html', label: 'Our affiliates & other content' },
@@ -601,11 +612,12 @@ const THEME_TOGGLE = "document.getElementById('theme-toggle').addEventListener('
   + "root.dataset.theme=dark?'light':'dark';try{localStorage.setItem('theme',root.dataset.theme)}catch(e){}});"
   + "document.getElementById('side-toggle').addEventListener('click',function(){"
   + "var open=this.parentNode.classList.toggle('open');this.setAttribute('aria-expanded',open)});";
-const SITE_LINKS = `<a href="guides.html">Guides</a><a href="${TOOLS_URL}/internet-speed-test/">Speed test</a>`
+const SITE_LINKS = `<a href="news.html">News</a><a href="guides.html">Guides</a><a href="${TOOLS_URL}/internet-speed-test/">Speed test</a>`
   + `<a href="${TOOLS_URL}/">Free tools</a>`;
 
-function shell({ file, title, nav, body, description = DESCRIPTION, schema }) {
-  const adScript = AD_CLIENT
+// `ads: false` leaves out the AdSense script, for pages of automated content.
+function shell({ file, title, nav, body, description = DESCRIPTION, schema, ads = true }) {
+  const adScript = ads && AD_CLIENT
     ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(AD_CLIENT)}" crossorigin="anonymous"></script>`
     : '';
   const canonical = SITE_URL ? `<link rel="canonical" href="${esc(`${SITE_URL}/${file === 'index.html' ? '' : file}`)}">` : '';
@@ -662,40 +674,35 @@ ${body}
 `;
 }
 
-function home({ sections, trends, builtAt, markets, scores, weather, gaming, tech, fuel }) {
+/** news.html: every automated feed (headlines, games, markets, fuel, tech, scores). No ad code, see section(). */
+function newsPage({ sections, trends, builtAt, markets, scores, gaming, tech, fuel }) {
   const marketsHtml = marketsBlock(markets);
   const scoresHtml = scoresBlock(scores);
-  const weatherHtml = weatherBlock(weather);
   const gamingHtml = gamingBlock(gaming);
   const techHtml = techBlock(tech);
   const fuelHtml = fuelBlock(fuel);
-  // Page order: weather and world time first, then Top Stories, Philippines and World, then the Game Zone, then the
-  // other sections, each followed by its data blocks (Business → markets and fuel prices, Technology → tech trends,
-  // Sports → scores). A block whose section failed to load goes at the end.
-  const after = { world: gamingHtml && gamingHtml + ad('infeed'), business: marketsHtml + fuelHtml, tech: techHtml,
-    sports: scoresHtml };
+  // Page order: Top Stories, Philippines and World, then the Game Zone, then the other sections, each followed by its
+  // data blocks (Business → markets and fuel prices, Technology → tech trends, Sports → scores). A block whose section
+  // failed to load goes at the end.
+  const after = { world: gamingHtml, business: marketsHtml + fuelHtml, tech: techHtml, sports: scoresHtml };
   const afterNav = { world: [['gaming', 'Game Zone', gamingHtml]],
     business: [['markets', 'Markets', marketsHtml], ['fuel', 'Fuel prices', fuelHtml]],
     tech: [['tech-trends', 'Tech Trends', techHtml]], sports: [['scores', 'Scores', scoresHtml]] };
   const placed = new Set(sections.map(({ sec }) => sec.id).filter((id) => after[id]));
   const extras = Object.entries(after).filter(([id]) => !placed.has(id)).map(([, html]) => html).join('\n');
-  const mainHtml = (weatherHtml && weatherHtml + ad('infeed')) + sections.map(({ sec, articles }) => section(sec, articles) + (after[sec.id] ?? '')
+  const mainHtml = sections.map(({ sec, articles }) => section(sec, articles) + (after[sec.id] ?? '')
     + (sec.id === 'world' ? promoBlocks() : '')).join('\n') + extras;
-  const navLinks = (weatherHtml ? '<a href="#weather">Weather &amp; time</a>' : '')
-    + sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>` + (afterNav[sec.id] ?? [])
-      .filter(([, , html]) => html).map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')).join('');
+  const navLinks = '<a href="./">Home</a>' + sections.map(({ sec }) => `<a href="#${sec.id}">${esc(sec.title)}</a>` + (afterNav[sec.id] ?? [])
+    .filter(([, , html]) => html).map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')).join('');
   const manila = builtAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
   const chips = trends.map((t) => `<a class="chip" href="${esc(t.link)}" target="_blank" rel="noopener nofollow">${esc(t.term)}${t.traffic ? ` <small>${esc(t.traffic)}</small>` : ''}</a>`).join('');
-  const sidebar = ad('sidebar') + ad('sidebar');
-  const body = `  ${ad('top')}
+  const body = `  ${quickLinks()}
   ${chips ? `<div class="trending"><b>Trending in PH</b>${chips}</div>` : ''}
-  <div class="layout${sidebar ? '' : ' single'}">
+  <div class="layout single">
     <main>
 ${mainHtml}
     </main>
-    ${sidebar ? `<aside>${sidebar}</aside>` : ''}
   </div>
-  ${ad('bottom')}
 <script>
 for (const t of document.querySelectorAll('time')) {
   const mins = Math.round((Date.now() - new Date(t.dateTime)) / 60000);
@@ -703,16 +710,90 @@ for (const t of document.querySelectorAll('time')) {
 }
 </script>`;
   return shell({
-    file: 'index.html',
-    title: `${SITE_NAME} — Philippines & World News`,
+    file: 'news.html',
+    title: `Latest News — ${SITE_NAME}`,
     nav: {
       updated: `<span class="updated">Updated ${esc(manila)} (Manila time)</span>`,
-      links: navLinks + SITE_LINKS,
+      links: navLinks + SITE_LINKS.replace('<a href="news.html">News</a>', ''),
     },
+    body,
+    description: NEWS_DESCRIPTION,
+    ads: false,
+  });
+}
+
+/** index.html: the site's own content first (weather and world time, guides by topic, tools), then a way into the news. */
+function home({ weather, sections }) {
+  const weatherHtml = weatherBlock(weather);
+  const bySlug = new Map(GUIDES.map((g) => [g.slug, g]));
+  const topics = GUIDE_TOPICS.map(([topic, slugs]) => {
+    const items = slugs.map((s) => bySlug.get(s)).filter(Boolean);
+    if (!items.length) return '';
+    const id = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return `<div class="promo"><h2>${esc(topic)}</h2><ul class="guide-list">${items.slice(0, 4).map((g) =>
+      `<li><a href="${g.slug}.html">${esc(g.title)}</a><span>${esc(g.description)}</span></li>`).join('')}</ul>`
+      + (items.length > 4 ? `<a class="more" href="guides.html#${id}">All ${items.length} ${esc(topic.toLowerCase())} guides →</a>` : '')
+      + '</div>';
+  }).join('');
+  const tools = TOOL_LINKS.map(([path, label]) => `<li><a href="${TOOLS_URL}/${path}">${esc(label)}</a></li>`).join('');
+  const newsLinks = sections.map(({ sec }) => `<a href="news.html#${sec.id}">${esc(sec.title)}</a>`).join('')
+    + '<a href="news.html#gaming">Game Zone</a><a href="news.html#markets">Markets</a><a href="news.html#fuel">Fuel prices</a>'
+    + '<a href="news.html#scores">Scores</a>';
+  const sidebar = ad('sidebar') + ad('sidebar');
+  const body = `  ${quickLinks()}
+  <div class="hero"><h1>Guides, tools and news for everyday life in the Philippines</h1>
+  <p>${esc(SITE_NAME)} explains the things that affect your pay, your money and your safety online in plain English, from 13th month pay and holiday pay to GCash scams, Roblox safety and AI tools, with free calculators and the day's headlines in one place.</p></div>
+  ${ad('top')}
+  <div class="layout${sidebar ? '' : ' single'}">
+    <main>
+${weatherHtml}
+${ad('infeed')}
+<section id="guides"><h2>Guides</h2><p class="intro">Written and reviewed by the ${esc(SITE_NAME)} team. <a href="guides.html">See all ${GUIDES.length} guides</a>.</p>
+<div class="topic-grid">${topics}</div></section>
+${ad('infeed')}
+<section id="tools"><h2>Free tools</h2><div class="promo"><ul>${tools}</ul><a class="more" href="${TOOLS_URL}/">All free tools →</a></div></section>
+<section id="news"><h2>Today's news</h2><p class="intro">Headlines from Philippine and international newsrooms, plus games, markets, fuel prices and scores, updated several times a day.</p>
+<div class="news-links">${newsLinks}</div><p><a class="cta" href="news.html">Read the latest news →</a></p></section>
+    </main>
+    ${sidebar ? `<aside>${sidebar}</aside>` : ''}
+  </div>
+  ${ad('bottom')}`;
+  return shell({
+    file: 'index.html',
+    title: `${SITE_NAME} — Philippine Guides, Tools & News`,
+    nav: { links: '<a href="#weather">Weather &amp; time</a><a href="#guides">Guides</a><a href="#tools">Tools</a>' + SITE_LINKS
+      .replace('<a href="guides.html">Guides</a>', '') },
     body,
     schema: { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, description: DESCRIPTION,
       ...(SITE_URL && { url: `${SITE_URL}/` }) },
   });
+}
+
+// Icon shortcuts at the top of the home and news pages, so visitors (for example at a computer shop) can jump to the
+// sites they use most. They open in a new tab so this site stays open. Social and everyday sites only: no gambling or
+// betting sites, which AdSense doesn't allow on pages with ads and which aren't for the young visitors we serve.
+const QUICK_LINKS = [
+  ['Facebook', 'https://www.facebook.com/'],
+  ['Messenger', 'https://www.messenger.com/'],
+  ['YouTube', 'https://www.youtube.com/'],
+  ['TikTok', 'https://www.tiktok.com/'],
+  ['Instagram', 'https://www.instagram.com/'],
+  ['X', 'https://x.com/'],
+  ['Discord', 'https://discord.com/app'],
+  ['Reddit', 'https://www.reddit.com/'],
+  ['Gmail', 'https://mail.google.com/', 'https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_48dp.png'],
+  ['Shopee', 'https://shopee.ph/'],
+  ['Lazada', 'https://www.lazada.com.ph/'],
+  ['Roblox', 'https://www.roblox.com/'],
+];
+
+function quickLinks() {
+  // An optional third entry is an icon URL, for sites whose favicon is generic (Gmail's is the Google "G").
+  return `<nav class="quick" aria-label="Quick links">${QUICK_LINKS.map(([name, url, icon]) => {
+    const src = icon ?? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).hostname)}&sz=64`;
+    return `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(name)}" aria-label="${esc(name)} (opens in a new tab)">`
+      + `<img src="${esc(src)}" alt="" width="38" height="38"></a>`;
+  }).join('')}</nav>`;
 }
 
 const TOOL_LINKS = [
@@ -738,19 +819,20 @@ const ALL_TOOLS = [
 
 /** Left menu on every page: news sections, markets and scores, every calculator, and guides. */
 function sideMenu(file) {
-  const home = file === 'index.html' ? '' : './'; // section anchors live on the home page
+  const home = file === 'index.html' ? '' : './'; // weather lives on the home page
+  const feed = file === 'news.html' ? '' : 'news.html'; // every other anchor lives on the news page
   const link = (href, label, current) => `<a href="${esc(href)}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
-  const sectionLink = (id) => link(`${home}#${id}`, SECTIONS.find((s) => s.id === id).title);
-  // Same order as the home page.
+  const sectionLink = (id) => link(`${feed}#${id}`, SECTIONS.find((s) => s.id === id).title);
+  // Same order as the news page.
   const weatherLinks = link(`${home}#weather`, 'Weather & world time');
-  const news = ['top', 'philippines', 'world'].map(sectionLink).join('');
-  const games = GAMING.filter((g) => g.priority).map((g) => link(`${home}#${gameId(g.title)}`, g.title)).join('')
-    + link(`${home}#gaming`, 'More games')
+  const news = link('news.html', 'All news', file === 'news.html') + ['top', 'philippines', 'world'].map(sectionLink).join('');
+  const games = GAMING.filter((g) => g.priority).map((g) => link(`${feed}#${gameId(g.title)}`, g.title)).join('')
+    + link(`${feed}#gaming`, 'More games')
     + link('gaming-scams-free-robux.html', 'Avoid gaming scams', file === 'gaming-scams-free-robux.html');
-  const moreNews = sectionLink('business') + link(`${home}#markets`, 'Markets: peso & stocks')
-    + link(`${home}#fuel`, 'Fuel prices: gas & diesel')
-    + sectionLink('tech') + link(`${home}#tech-trends`, 'Tech Trends: AI & automation')
-    + sectionLink('entertainment') + sectionLink('sports') + link(`${home}#scores`, 'Scores: NBA & football');
+  const moreNews = sectionLink('business') + link(`${feed}#markets`, 'Markets: peso & stocks')
+    + link(`${feed}#fuel`, 'Fuel prices: gas & diesel')
+    + sectionLink('tech') + link(`${feed}#tech-trends`, 'Tech Trends: AI & automation')
+    + sectionLink('entertainment') + sectionLink('sports') + link(`${feed}#scores`, 'Scores: NBA & football');
   const tools = ALL_TOOLS.map(([group, items]) => `<h2>Tools: ${esc(group)}</h2>`
     + items.map(([path, label]) => link(`${TOOLS_URL}/${path}`, label)).join('')).join('')
     + `<a class="all" href="${esc(TOOLS_URL)}/">All free tools →</a>`;
@@ -775,7 +857,7 @@ function infoPage(file, heading, content, { description, schema } = {}) {
   return shell({
     file,
     title: `${heading} — ${SITE_NAME}`,
-    nav: { links: `<a href="./">← Headlines</a>${SITE_LINKS}` },
+    nav: { links: `<a href="./">Home</a>${SITE_LINKS}` },
     body: `<article class="prose"><h1>${esc(heading)}</h1>\n${content}\n</article>`,
     description,
     schema,
@@ -843,10 +925,12 @@ ${services}`,
     { description: `Channels and pages from the team behind ${SITE_NAME}: The Pebble Minds, Echoes and Obsidian, Yanyanirism and more.` }),
 
     'about.html': infoPage('about.html', 'About Us', `
-<p>${name} brings together the stories people in the Philippines are reading and searching for right now, in one fast page.</p>
+<p>${name} publishes plain-English guides on the things that affect everyday life in the Philippines (pay, money, online safety, gaming and AI), alongside free calculators, weather and world time, and a page of the day's headlines.</p>
 <h2>What you'll find here</h2>
 <ul>
-  <li><b>Top headlines</b> from Philippine and international publishers, grouped into Philippines, World, Business, Technology, Entertainment and Sports.</li>
+  <li><b>Guides</b> written and reviewed by our team, on topics like 13th month pay, holiday pay, GCash scams and Roblox safety.</li>
+  <li><b>Free calculators</b> for take-home pay, loans, savings and more.</li>
+  <li><b>Top headlines</b> on our <a href="news.html">News page</a>, from Philippine and international publishers, grouped into Philippines, World, Business, Technology, Entertainment and Sports.</li>
   <li><b>Trending searches</b> in the Philippines, so you can see what everyone is talking about today.</li>
 </ul>
 <h2>How it works</h2>
@@ -879,7 +963,7 @@ ${services}
   <li>Guides are general information, not legal, tax or financial advice.</li>
 </ul>
 <h2>Independence and advertising</h2>
-<p>${name} is independent and is not affiliated with the publishers we link to. Ads are clearly labelled and are served by Google; advertisers have no say over which headlines or guides appear.</p>
+<p>${name} is independent and is not affiliated with the publishers we link to. Ads are clearly labelled and are served by Google; advertisers have no say over which headlines or guides appear. Ads appear only on pages we write ourselves, such as our guides; the automated News page carries no ads.</p>
 <h2>Corrections</h2>
 <p>If something on the site is wrong — a broken link, an outdated figure in a guide, or a headline that links to the wrong story — please tell us on our <a href="contact.html">Contact</a> page. We review every report and update the page when a correction is needed.</p>`,
     { description: `How ${SITE_NAME} selects headlines, writes its guides and handles corrections.` }),
@@ -957,14 +1041,15 @@ const lastmod = builtAt.toISOString().slice(0, 10);
 
 await mkdir('dist', { recursive: true });
 await cp('assets', 'dist/assets', { recursive: true });
-await writeFile('dist/index.html', home({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, weather, gaming, tech,
+await writeFile('dist/index.html', home({ weather, sections }));
+await writeFile('dist/news.html', newsPage({ sections, trends, builtAt, markets: { forex, stocks, indices }, scores, gaming, tech,
   fuel: { news: fuelNews, crude } }));
 for (const [file, html] of Object.entries({ ...infoPages(builtAt), ...guidePages() })) await writeFile(`dist/${file}`, html);
 await writeFile('dist/favicon.svg', FAVICON);
 if (INDEXNOW_KEY) await writeFile(`dist/${INDEXNOW_KEY}.txt`, INDEXNOW_KEY);
 if (AD_CLIENT) await writeFile('dist/ads.txt', `google.com, ${AD_CLIENT.replace('ca-', '')}, DIRECT, f08c47fec0942fa0\n`);
 if (SITE_URL) {
-  const pages = [['', lastmod], ['guides.html', lastmod], ...GUIDES.map((g) => [`${g.slug}.html`, g.updated]),
+  const pages = [['', lastmod], ['news.html', lastmod], ['guides.html', lastmod], ...GUIDES.map((g) => [`${g.slug}.html`, g.updated]),
     ...PAGES.map((p) => [p.file, lastmod])];
   const urls = pages.map(([f, mod]) => `<url><loc>${esc(`${SITE_URL}/${f}`)}</loc><lastmod>${mod}</lastmod></url>`).join('');
   await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`);
