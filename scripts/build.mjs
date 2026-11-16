@@ -578,10 +578,11 @@ footer nav{justify-content:center;padding:8px 0 0}
 .side.open .side-list{display:block}
 .side.open .side-toggle span{display:inline-block;transform:rotate(180deg)}}
 .hero{margin:20px 0 8px}
-.quick{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 4px}
-.quick a{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.quick{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0 4px}
+.quick a{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:1px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .quick a:hover{border-color:var(--accent-2)}
-.quick img{width:28px;height:28px}
+.quick img{width:38px;height:38px}
+@media (max-width:560px){.quick{gap:10px}.quick a{width:54px;height:54px}.quick img{width:32px;height:32px}}
 .hero h1{font-size:clamp(1.5rem,4vw,2rem);line-height:1.2;margin:0 0 8px}
 .hero p{margin:0;color:var(--muted);max-width:720px}
 .topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
@@ -780,18 +781,18 @@ const QUICK_LINKS = [
   ['X', 'https://x.com/'],
   ['Discord', 'https://discord.com/app'],
   ['Reddit', 'https://www.reddit.com/'],
-  ['Gmail', 'https://mail.google.com/', 'gmail.com'],
+  ['Gmail', 'https://mail.google.com/', 'https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_48dp.png'],
   ['Shopee', 'https://shopee.ph/'],
   ['Lazada', 'https://www.lazada.com.ph/'],
   ['Roblox', 'https://www.roblox.com/'],
 ];
 
 function quickLinks() {
-  // An optional third entry names the domain whose icon to show, when the link's own host has a generic one.
-  return `<nav class="quick" aria-label="Quick links">${QUICK_LINKS.map(([name, url, iconHost]) => {
-    const host = iconHost ?? new URL(url).hostname;
+  // An optional third entry is an icon URL, for sites whose favicon is generic (Gmail's is the Google "G").
+  return `<nav class="quick" aria-label="Quick links">${QUICK_LINKS.map(([name, url, icon]) => {
+    const src = icon ?? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).hostname)}&sz=64`;
     return `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(name)}" aria-label="${esc(name)} (opens in a new tab)">`
-      + `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&amp;sz=64" alt="" width="28" height="28"></a>`;
+      + `<img src="${esc(src)}" alt="" width="38" height="38"></a>`;
   }).join('')}</nav>`;
 }
 
