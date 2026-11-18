@@ -12,6 +12,8 @@ const SITE_NAME = env('SITE_NAME') || 'PH Trend Watch';
 const SITE_URL = env('SITE_URL').replace(/\/+$/, '');
 const CONTACT_EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(env('CONTACT_EMAIL')) ? env('CONTACT_EMAIL') : '';
 const TOOLS_URL = (env('TOOLS_URL') || 'https://tools.phtrendwatch.world').replace(/\/+$/, '');
+// Our own free game for toddlers (no ads, works offline), on its own subdomain.
+const GAME_URL = (env('GAME_URL') || 'https://poppop.phtrendwatch.world').replace(/\/+$/, '');
 // Search engine ownership checks. The IndexNow key is public by design: it is served at /<key>.txt.
 const GOOGLE_VERIFY = env('GOOGLE_SITE_VERIFICATION');
 const BING_VERIFY = env('BING_SITE_VERIFICATION');
@@ -578,7 +580,7 @@ footer nav{justify-content:center;padding:8px 0 0}
 .side.open .side-list{display:block}
 .side.open .side-toggle span{display:inline-block;transform:rotate(180deg)}}
 .hero{margin:20px 0 8px}
-.quick{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0 4px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
 .quick a{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:1px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .quick a:hover{border-color:var(--accent-2)}
 .quick img{width:38px;height:38px}
@@ -613,7 +615,7 @@ const THEME_TOGGLE = "document.getElementById('theme-toggle').addEventListener('
   + "document.getElementById('side-toggle').addEventListener('click',function(){"
   + "var open=this.parentNode.classList.toggle('open');this.setAttribute('aria-expanded',open)});";
 const SITE_LINKS = `<a href="news.html">News</a><a href="guides.html">Guides</a><a href="${TOOLS_URL}/internet-speed-test/">Speed test</a>`
-  + `<a href="${TOOLS_URL}/">Free tools</a>`;
+  + `<a href="${TOOLS_URL}/">Free tools</a><a href="${GAME_URL}/">Kids game</a>`;
 
 // `ads: false` leaves out the AdSense script, for pages of automated content.
 function shell({ file, title, nav, body, description = DESCRIPTION, schema, ads = true }) {
@@ -773,6 +775,7 @@ ${ad('infeed')}
 // sites they use most. They open in a new tab so this site stays open. Social and everyday sites only: no gambling or
 // betting sites, which AdSense doesn't allow on pages with ads and which aren't for the young visitors we serve.
 const QUICK_LINKS = [
+  ['Pop Pop Play: free toddler game', `${GAME_URL}/`, `${GAME_URL}/icon-192.png`], // our own game, first
   ['Facebook', 'https://www.facebook.com/'],
   ['Messenger', 'https://www.messenger.com/'],
   ['YouTube', 'https://www.youtube.com/'],
@@ -828,6 +831,7 @@ function sideMenu(file) {
   const news = link('news.html', 'All news', file === 'news.html') + ['top', 'philippines', 'world'].map(sectionLink).join('');
   const games = GAMING.filter((g) => g.priority).map((g) => link(`${feed}#${gameId(g.title)}`, g.title)).join('')
     + link(`${feed}#gaming`, 'More games')
+    + link(`${GAME_URL}/`, 'Pop Pop Play: toddler game')
     + link('gaming-scams-free-robux.html', 'Avoid gaming scams', file === 'gaming-scams-free-robux.html');
   const moreNews = sectionLink('business') + link(`${feed}#markets`, 'Markets: peso & stocks')
     + link(`${feed}#fuel`, 'Fuel prices: gas & diesel')
